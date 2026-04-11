@@ -8,7 +8,7 @@ The current mock scenario is the final week of the 2024-25 NBA regular season, i
 
 ## Purpose
 
-This project is a class-demo prototype, not a production application. It intentionally excludes authentication, real platform account actions, UI, production deployment, and multi-sport scope beyond a minimal NBA-specific reasoning layer.
+This project is a class-demo prototype, not a production application. It intentionally excludes authentication, real platform account actions, production deployment, and multi-sport scope beyond a minimal NBA-specific reasoning layer. A **local Streamlit UI** (`web/app.py`) is included for demos; it does not change league accounts.
 
 ## Architecture Overview
 
@@ -106,7 +106,16 @@ FanDraGen/
     test_delivery.py
     test_fallback.py
     test_end_to_end.py
+    test_intent_registry.py
+    test_espn_integration.py
+  web/
+    app.py
+  .streamlit/
+    config.toml
+  docs/
+    DEMO_SCRIPT.md
   main.py
+  Makefile
   run_demo.ps1
   run_tests.ps1
   CONTRIBUTING.md
@@ -141,14 +150,20 @@ Those are described in detail in `docs/WORKSTREAMS.md`, including first tasks, d
 
 ### Quick start (macOS / Linux, with Make)
 
-One-time setup, then run:
+**Use Python 3.11+** when possible (see `.python-version`; `pyenv` / `uv` can pin it). Older versions may need `eval_type_backport` from `requirements.txt`.
+
+One-time setup, then launch the **web UI** (opens Streamlit, default port **8501**):
 
 ```bash
 make setup
 make run
 ```
 
+Terminal demo (no browser): `make cli` (same as `python main.py`).
+
 Other targets: `make test`, `make sample N=3`, `make prompt P="Who is the best waiver pickup?"`, `make help`.
+
+Presentation prompts are listed in [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md).
 
 ### Manual setup (any OS)
 
@@ -189,8 +204,11 @@ Copy `.env.example` to `.env` locally (never commit `.env`).
 
 | Variable | Purpose |
 |----------|---------|
-| `GEMINI_API_KEY` | If set, the boss may rewrite summary/rationale for readability **after** evaluators pass, using only tool evidence already attached. If unset, behavior stays fully deterministic. |
+| `GEMINI_API_KEY` | If set, the boss may rewrite summary/rationale for readability **after** evaluators pass, using only tool evidence already attached. Implemented with the supported **`google-genai`** SDK. If unset, behavior stays fully deterministic. |
 | `FANDRAGEN_LIVE_ESPN` | Set to `1` or `true` to merge **live** NBA headlines and a small standings snapshot from ESPN public JSON into `NewsTool` / `PlayerStatsTool` results. Roster and player rows remain demo CSV/JSON. If ESPN is unreachable, a fallback flag is recorded and demo data still drives recommendations. |
+| `FANDRAGEN_DEBUG` | Set to `1` for more verbose logs (including Gemini enrichment diagnostics). |
+
+Enrichment failures are logged to stderr at **INFO**/**WARNING** (e.g. model errors or JSON parse issues) so `gemini_enrichment_applied: false` is explainable without silent failures.
 
 ## How Shared State Moves Through The System
 

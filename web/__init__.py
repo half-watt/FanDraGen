@@ -1,0 +1,1 @@
+"""FanDraGen web UI package."""
