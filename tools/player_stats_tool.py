@@ -1,4 +1,4 @@
-"""Player stats tool: demo CSV plus optional ESPN and nba_api enrichment."""
+"""Player stats tool: NBA stats CSV plus optional ESPN and nba_api enrichment."""
 
 from __future__ import annotations
 
@@ -10,19 +10,20 @@ from integrations.nba_api_stats import merge_demo_rows_with_nba
 from schemas.models import ToolResult, WorkflowState
 from tools.base import BaseTool
 from utils.env import live_espn_enabled
-from utils.file_utils import demo_path, read_csv
+from utils.file_utils import league_data_path
+from utils.nba_data_source import data_source_label, load_players_table
 
 
 class PlayerStatsTool(BaseTool):
-    """Reads player stats from demo CSV; optionally attaches live NBA market context."""
+    """Reads player stats from the NBA stats CSV; optionally attaches live NBA market context."""
 
     tool_name = "PlayerStatsTool"
 
     def __init__(self, data_dir: Path | None = None) -> None:
-        self.data_dir = data_dir or demo_path()
+        self.data_dir = data_dir or league_data_path()
 
     def _load_players(self) -> list[dict[str, str]]:
-        return read_csv(self.data_dir / "players.csv")
+        return load_players_table(self.data_dir)
 
     def _filter(self, player_names: Iterable[str] | None = None) -> list[dict[str, str]]:
         rows = self._load_players()
@@ -40,7 +41,7 @@ class PlayerStatsTool(BaseTool):
         standings = espn_nba.fetch_nba_standings_snapshot(max_teams=6)
         if not standings.get("ok"):
             state.add_fallback("live_espn_standings_unavailable")
-            return {"live_espn": standings, "note": "Live ESPN standings request failed; demo rows unchanged."}, True
+            return {"live_espn": standings, "note": "Live ESPN standings request failed; stat rows unchanged."}, True
         return {"live_espn": standings, "note": "Live ESPN standings snapshot for late-season context."}, False
 
     def fetch_player_stats(self, state: WorkflowState, player_names: list[str] | None = None) -> ToolResult:
@@ -55,7 +56,9 @@ class PlayerStatsTool(BaseTool):
             tool_name=self.tool_name,
             method_name="fetch_player_stats",
             data=rows,
-            supporting_points=[f"Retrieved base stat rows for {len(rows)} players.{nba_note}"]
+            supporting_points=[
+                f"Retrieved base stat rows for {len(rows)} players ({data_source_label()}).{nba_note}"
+            ]
             + ([enrichment["note"]] if enrichment else []),
             summary="Loaded player stat rows.",
             fallback_used=row_missing,
@@ -83,7 +86,7 @@ class PlayerStatsTool(BaseTool):
             tool_name=self.tool_name,
             method_name="fetch_recent_form",
             data=out,
-            supporting_points=["Recent form blends demo recent_points_avg with nba_api last-10 PTS when enabled."]
+            supporting_points=["Recent form blends table recent_points_avg with nba_api last-10 PTS when enabled."]
             + ([enrichment["note"]] if enrichment else []),
             summary="Loaded recent form.",
             enrichment=enrichment,
@@ -118,7 +121,7 @@ class PlayerStatsTool(BaseTool):
             tool_name=self.tool_name,
             method_name="fetch_projections",
             data=rows,
-            supporting_points=["Projection row blends demo data with nba_api when FANDRAGEN_NBA_API=1."]
+            supporting_points=["Projection row blends table data with nba_api when FANDRAGEN_NBA_API=1."]
             + ([enrichment["note"]] if enrichment else []),
             summary="Loaded projections.",
             enrichment=enrichment,

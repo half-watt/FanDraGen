@@ -42,6 +42,7 @@ def _flags() -> dict[str, bool | str]:
         "gemini_key": os.getenv("GEMINI_API_KEY", "").strip(),
         "nba_api": os.getenv("FANDRAGEN_NBA_API", "").strip().lower() in {"1", "true", "yes"},
         "nba_season": os.getenv("NBA_STATS_SEASON", "").strip(),
+        "gemini_model": os.getenv("GEMINI_MODEL", "").strip(),
     }
 
 
@@ -55,6 +56,13 @@ def gemini_api_key() -> str:
     """Google AI Studio / Gemini API key for optional rationale polish."""
 
     return str(_flags()["gemini_key"])
+
+
+def gemini_model_override() -> str | None:
+    """Optional single model id to try first (e.g. ``gemini-2.0-flash-001``)."""
+
+    m = _flags()["gemini_model"]
+    return str(m) if m else None
 
 
 def nba_api_enabled() -> bool:

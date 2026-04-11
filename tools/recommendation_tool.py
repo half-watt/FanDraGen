@@ -13,7 +13,8 @@ from typing import Any
 from integrations.nba_api_stats import merge_demo_rows_with_nba
 from schemas.models import Recommendation, ToolResult, WorkflowState
 from tools.base import BaseTool
-from utils.file_utils import demo_path, read_csv, read_json
+from utils.file_utils import league_data_path, read_json
+from utils.nba_data_source import data_source_label, load_players_table
 
 
 class RecommendationTool(BaseTool):
@@ -22,10 +23,10 @@ class RecommendationTool(BaseTool):
     tool_name = "RecommendationTool"
 
     def __init__(self, data_dir: Path | None = None) -> None:
-        self.data_dir = data_dir or demo_path()
+        self.data_dir = data_dir or league_data_path()
 
     def _load_players(self, state: WorkflowState | None = None) -> list[dict[str, Any]]:
-        rows = read_csv(self.data_dir / "players.csv")
+        rows = load_players_table(self.data_dir)
         if state is not None:
             return merge_demo_rows_with_nba(rows, state, self.data_dir)
         return rows
@@ -114,8 +115,12 @@ class RecommendationTool(BaseTool):
                 f"Recent average: {top['recent_points_avg']}",
                 f"Matchup difficulty: {top['matchup_difficulty']}",
             ],
-            assumptions=["This assumes standard head-to-head points scoring from the demo rules."],
-            supporting_evidence=["RecommendationTool.rank_players", "RecommendationTool.recommend_draft_pick", "demo players.csv"],
+            assumptions=["This assumes standard head-to-head points scoring from league_rules.json."],
+            supporting_evidence=[
+                "RecommendationTool.rank_players",
+                "RecommendationTool.recommend_draft_pick",
+                data_source_label(),
+            ],
         )
         result = ToolResult(
             tool_name=self.tool_name,
@@ -174,7 +179,11 @@ class RecommendationTool(BaseTool):
                 f"{give_player} score: {round(give_score, 2)}",
             ],
             assumptions=["The trade is evaluated as a one-for-one points-league swap."],
-            supporting_evidence=["RecommendationTool.evaluate_trade", "PlayerStatsTool.fetch_player_stats", "demo players.csv"],
+            supporting_evidence=[
+                "RecommendationTool.evaluate_trade",
+                "PlayerStatsTool.fetch_player_stats",
+                data_source_label(),
+            ],
         )
         result = ToolResult(
             tool_name=self.tool_name,
@@ -191,7 +200,7 @@ class RecommendationTool(BaseTool):
         recommendation = Recommendation(
             item_id=top["player_id"],
             title=f"Add {top['player_name']} from waivers",
-            details=f"Best free-agent score in the demo pool: {top['heuristic_score']}.",
+            details=f"Best free-agent score in the current pool: {top['heuristic_score']}.",
             confidence=0.81,
             score=float(top["heuristic_score"]),
             action_type="waiver/free agent pickup",

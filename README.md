@@ -1,6 +1,6 @@
 # FanDraGen
 
-FanDraGen is a research-demo-grade, local-first NBA fantasy sports assistant scaffold. It demonstrates multi-agent orchestration, explicit shared state, tool usage, evaluator behavior, fallback handling, simulated approval checkpoints, and traceability. **Core demos use deterministic `data/demo` files** so tests and CI stay keyless. **Optional integrations** can enrich outputs: public ESPN JSON (no key) and an optional Gemini API key for natural-language polish that still relies on attached tool evidence.
+FanDraGen is a research-grade, local-first NBA fantasy sports assistant scaffold. It demonstrates multi-agent orchestration, explicit shared state, tool usage, evaluator behavior, fallback handling, simulated approval checkpoints, and traceability. **Player stats come from a required Kaggle-format NBA season CSV** (see `data/kaggle/` and `utils/nba_data_source.py`). League structure (rules, matchups, roster slot pattern) lives under **`data/nba/`**. **Optional integrations** can enrich outputs: public ESPN JSON (no key) and an optional Gemini API key for natural-language polish that still relies on attached tool evidence.
 
 The primary implementation is plain Python. An optional LangGraph mirror layer is included to show how the same workflow could be expressed as a stateful graph, but the core system runs entirely without LangGraph.
 
@@ -75,8 +75,14 @@ FanDraGen/
   schemas/
     models.py
   data/
-    demo/
-      nba_player_map.json
+    nba/
+      league_rules.json
+      roster_template.csv
+      season_context.json
+    kaggle/
+      nba_player_stats_2425.csv  (from Kaggle or scripts/download_kaggle_nba_csv.py; gitignored)
+  scripts/
+    download_kaggle_nba_csv.py
   configs/
     default_config.yaml
   prompts/
@@ -94,6 +100,8 @@ FanDraGen/
     logging_utils.py
     trace_utils.py
     file_utils.py
+    kaggle_nba_loader.py
+    nba_data_source.py
     metrics.py
   langgraph_optional/
     graph_state.py
@@ -207,9 +215,11 @@ Copy `.env.example` to `.env` locally (never commit `.env`).
 | Variable | Purpose |
 |----------|---------|
 | `GEMINI_API_KEY` | If set, the boss may rewrite summary/rationale for readability **after** evaluators pass, using only tool evidence already attached. Implemented with the supported **`google-genai`** SDK. If unset, behavior stays fully deterministic. |
-| `FANDRAGEN_LIVE_ESPN` | Set to `1` or `true` to merge **live** NBA headlines and a small standings snapshot from ESPN public JSON into `NewsTool` / `PlayerStatsTool` results. Roster and player rows remain demo CSV/JSON. If ESPN is unreachable, a fallback flag is recorded and demo data still drives recommendations. |
-| `FANDRAGEN_NBA_API` | Set to `1` to pull **real** per-game stats from stats.nba.com using the [`nba_api`](https://github.com/swar/nba_api) package. Fantasy names stay the same; [`data/demo/nba_player_map.json`](data/demo/nba_player_map.json) maps each `player_id` to an NBA `PERSON_ID`. `PlayerStatsTool` and `RecommendationTool` blend last-10 PTS/REB/AST with demo projections. First run may take longer (HTTP + rate limits). |
-| `NBA_STATS_SEASON` | Optional season string for game logs, e.g. `2024-25`. Defaults to `season_default` in `nba_player_map.json`. |
+| `GEMINI_MODEL` | Optional. Pin one model id (e.g. `gemini-2.0-flash-001`) if the default candidate list returns 404 or you want to avoid quota retries across multiple names. |
+| `FANDRAGEN_LIVE_ESPN` | Set to `1` or `true` to merge **live** NBA headlines and a small standings snapshot from ESPN public JSON into `NewsTool` / `PlayerStatsTool` results. If ESPN is unreachable, a fallback flag is recorded. |
+| `FANDRAGEN_NBA_API` | Set to `1` to pull **real** per-game stats from stats.nba.com using the [`nba_api`](https://github.com/swar/nba_api) package. Optional [`data/nba/nba_player_map.json`](data/nba/nba_player_map.json) can map `player_id` → NBA `PERSON_ID`; otherwise a numeric `Player_ID` / `PLAYER_ID` (or `kaggle_nba_person_id` after load) column in the stats CSV is used. `PlayerStatsTool` and `RecommendationTool` blend last-10 PTS/REB/AST with table projections. First run may take longer (HTTP + rate limits). |
+| `FANDRAGEN_KAGGLE_NBA_CSV` | Path to the [Kaggle 2024–25 NBA player stats CSV](https://www.kaggle.com/datasets/eduardopalmieri/nba-player-stats-season-2425). **Default if unset:** `data/kaggle/nba_player_stats_2425.csv` (relative to the project root). This file is **required** at runtime. Roster and waiver **slots** follow `data/nba/roster_template.csv` / `free_agents_template.csv`; player IDs are assigned from the CSV in projection order. |
+| `NBA_STATS_SEASON` | Optional season string for game logs, e.g. `2024-25`. Defaults to `2024-25` when no `nba_player_map.json` season is present. |
 | `FANDRAGEN_DEBUG` | Set to `1` for more verbose logs (including Gemini enrichment diagnostics). |
 
 Enrichment failures are logged to stderr at **INFO**/**WARNING** (e.g. model errors or JSON parse issues) so `gemini_enrichment_applied: false` is explainable without silent failures.
@@ -224,29 +234,29 @@ Enrichment failures are logged to stderr at **INFO**/**WARNING** (e.g. model err
 6. `DeliveryAgent` emits final JSON and markdown while marking simulated approval checkpoints.
 7. Metrics and trace data are added for demo inspection.
 
-## Mock Data And Fallback Mode
+## Data And Fallback Mode
 
-All tools read from `data/demo`. No external API calls are required.
+Place the downloaded Kaggle CSV at **`data/kaggle/nba_player_stats_2425.csv`** (or set `FANDRAGEN_KAGGLE_NBA_CSV`). Alternatively, with [Kaggle API credentials](https://www.kaggle.com/docs/api) configured, run **`pip install kagglehub`** and **`python scripts/download_kaggle_nba_csv.py`** from the repo root to fetch `eduardopalmieri/nba-player-stats-season-2425` and copy `database_24_25.csv` into place. Game-level exports are aggregated to one row per player automatically. No API key is required for the base stats path. Optional ESPN / `nba_api` / Gemini integrations are env-gated.
 
-The current demo dataset is intentionally set in the week of `2025-04-07` through `2025-04-13`, representing the final regular-season week before a fantasy playoff bracket starts.
+The scenario in `data/nba/season_context.json` is set in the week of `2025-04-07` through `2025-04-13`, representing the final regular-season week before a fantasy playoff bracket starts.
 
 Fallback behavior is explicit:
 
-- The system always labels that demo data is active.
+- The delivery payload includes `data_source.nba_stats_csv` and `using_synthetic_players: false`.
 - Missing-data requests surface `fallback_flags` in the workflow state and final JSON.
 - Recommendation execution is never sent to a real fantasy platform.
 - Trade, lineup, draft, and waiver recommendations are marked `approval_required = true`.
 
-## What Is Mocked
+## What Is Local / Simulated
 
-- League rosters, matchups, scoring rules, and free agents (CSV/JSON under `data/demo/`).
-- Player stat rows, projections, and curated news used for ranking and explanations.
+- League **structure**: matchups, scoring rules, roster slot pattern, and empty news shell (`data/nba/`).
+- **Player stats**: real season table from the Kaggle-format CSV (names, teams, PTS/REB/AST, etc.).
 - Recommendation scoring (heuristic in `tools/recommendation_tool.py`, with injury/status penalties).
-- User memory persistence.
+- User memory persistence (`data/nba/user_memory.json`, gitignored when customized).
 - Human approval checkpoints (simulated; no real platform execution).
 - LangGraph integration, unless the optional dependency is installed.
 
-Optional **live ESPN** snippets supplement context only; they do not replace fictional roster rows unless you extend the data layer.
+Optional **live ESPN** snippets supplement context when enabled.
 
 ## Current Recommendation Engine
 
@@ -351,7 +361,7 @@ Summary: Zion Mercer leads the deterministic free-agent pool because his project
   "recommendations": [
     {
       "title": "Start the highest-scoring five rostered players",
-      "proposed_action": "Set starters to Luka Vance, Owen Price, DeAndre Knox, Mason Reed, Victor Hale.",
+      "proposed_action": "Set starters to … (top five heuristic scores from your NBA stats CSV roster).",
       "approval_required": true
     }
   ],
@@ -365,10 +375,10 @@ Summary: The lineup path promotes the top five rostered heuristic scores and lab
 
 ```json
 {
-  "summary": "Explained the assumptions FanDraGen makes when demo data is missing or incomplete.",
-  "fallback_demo_data_usage": {
-    "using_demo_data": true,
-    "fallback_flags": ["missing_projection_source_in_demo_mode"]
+  "summary": "Explained the assumptions FanDraGen makes when local data is missing or incomplete.",
+  "data_source": {
+    "using_synthetic_players": false,
+    "fallback_flags": ["missing_projection_source_local_mode"]
   },
   "trace": {
     "revision_count": 1
@@ -394,7 +404,7 @@ These are lightweight demo metrics rather than a full benchmarking framework.
 
 - No authentication
 - No real fantasy account actions
-- No external APIs
+- No external APIs in the default configuration (optional ESPN / `nba_api` / Gemini when enabled)
 - No multisport implementation beyond minimal NBA helper logic
 - No web or graphical UI
 - No production deployment setup

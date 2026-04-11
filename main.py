@@ -6,6 +6,7 @@ import argparse
 import json
 
 from utils.env import load_env
+from utils.nba_data_source import exit_if_nba_stats_csv_missing
 from utils.file_utils import read_yaml
 from utils.logging_utils import summarize_logs
 from utils.trace_utils import build_trace_snapshot
@@ -21,6 +22,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     load_env()
+    exit_if_nba_stats_csv_missing()
     config = read_yaml(__import__("pathlib").Path("configs/default_config.yaml"))
     prompts = config["demo"]["prompts"]
     args = parse_args()

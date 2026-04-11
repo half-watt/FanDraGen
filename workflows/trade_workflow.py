@@ -9,9 +9,9 @@ def build_tasks(state: WorkflowState) -> list[AgentTask]:
     return [
         AgentTask(
             task_type="trade evaluation",
-            description="Evaluate the proposed one-for-one trade in demo mode.",
+            description="Evaluate the proposed one-for-one trade using NBA stats CSV rows.",
             assigned_agent="TradeEvaluationAgent",
-            input_payload={"give_player": "Luka Vance", "receive_player": "Tariq Cole"},
+            input_payload={"give_player": "Top Player Omega", "receive_player": "Top Player Bravo"},
             requires_tools=["PlayerStatsTool", "RecommendationTool"],
         )
     ]

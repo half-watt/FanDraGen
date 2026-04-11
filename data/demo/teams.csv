@@ -1,7 +1,0 @@
-team_id,fantasy_team_name,manager_name,sport,league_id,conference,wins,losses,points_for,points_against,fg_pct,fg3m,ft_pct,reb,ast,stl,blk,tov,off_rating,def_rating,net_rating,pace
-team_001,Skyline Ballers,Avery,NBA,demo_league_01,West,48,31,10384,10072,0.479,1028,0.812,3524,2210,603,402,1035,117.6,112.4,5.2,99.2
-team_002,Rim Runners,Jordan,NBA,demo_league_01,East,45,34,10112,10058,0.471,987,0.798,3441,2156,589,381,1014,115.8,114.7,1.1,98.7
-team_003,Fastbreak Union,Riley,NBA,demo_league_01,West,51,28,10605,10001,0.486,1112,0.819,3602,2289,626,414,1022,119.1,110.8,8.3,100.3
-team_004,Paint Predators,Casey,NBA,demo_league_01,East,42,37,10047,10104,0.466,941,0.792,3495,2098,566,395,1071,114.2,115.0,-0.8,97.9
-team_005,Clutch Theory,Devon,NBA,demo_league_01,West,39,40,9928,10035,0.462,915,0.786,3408,2053,552,376,1090,112.7,113.5,-0.8,99.8
-team_006,Court Visionary,Morgan,NBA,demo_league_01,East,37,42,9855,10186,0.458,902,0.781,3366,2014,540,361,1113,111.9,114.9,-3.0,100.9

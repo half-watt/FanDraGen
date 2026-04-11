@@ -19,7 +19,7 @@ class UserQuery(BaseModel):
     text: str
     sport: str = "NBA"
     user_id: str = "demo_user"
-    league_id: str = "demo_league_01"
+    league_id: str = "nba_league_01"
     received_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 

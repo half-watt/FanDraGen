@@ -1,6 +1,6 @@
 """File and data-loading helpers.
 
-The demo uses local files as the source of truth. These helpers centralize file
+Local files under ``data/nba`` and the NBA stats CSV provide the source of truth. These helpers centralize file
 loading and controlled fallback handling so tools can report data quality issues
 in a consistent way.
 """
@@ -16,7 +16,7 @@ import yaml
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEMO_DATA_DIR = PROJECT_ROOT / "data" / "demo"
+NBA_LEAGUE_DATA_DIR = PROJECT_ROOT / "data" / "nba"
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -65,7 +65,7 @@ def missing_fields(rows: list[dict[str, Any]], required_fields: list[str]) -> li
     return [field for field in required_fields if field not in field_names]
 
 
-def demo_path(*parts: str) -> Path:
-    """Resolve a path relative to the deterministic demo dataset."""
+def league_data_path(*parts: str) -> Path:
+    """Resolve a path relative to ``data/nba`` (league templates, rules, news shell)."""
 
-    return DEMO_DATA_DIR.joinpath(*parts)
+    return NBA_LEAGUE_DATA_DIR.joinpath(*parts)

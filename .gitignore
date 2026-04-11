@@ -13,4 +13,5 @@ venv/
 dist/
 build/
 *.egg-info/
-data/demo/user_memory.json
+data/nba/user_memory.json
+data/kaggle/nba_player_stats_2425.csv

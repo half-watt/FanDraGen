@@ -43,10 +43,10 @@ class ManagingAgent(BaseAgent):
 
         if task.task_type == "missing data / fallback explanation":
             if not state.fallback_flags:
-                state.add_fallback("missing_projection_source_in_demo_mode")
-            summary = "Explained the assumptions FanDraGen makes when demo data is missing or incomplete."
+                state.add_fallback("missing_projection_source_local_mode")
+            summary = "Explained the assumptions FanDraGen makes when local data is missing or incomplete."
             rationale = [
-                "The system stays in local demo mode and never invents external data sources.",
+                "The system uses the local NBA stats CSV and league files and does not invent external data sources.",
                 "When a file or field is missing, the workflow surfaces a fallback flag and uses the best available local evidence.",
             ]
             return AgentResult(

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from schemas.models import AgentResult, ApprovalStatus, FinalResponse, WorkflowState
 from utils.logging_utils import log_event
+from utils.nba_data_source import nba_stats_csv_display_path
 from utils.trace_utils import build_trace_snapshot
 
 
@@ -31,8 +32,10 @@ class DeliveryAgent:
             "rationale": result.rationale,
             "assumptions": result.assumptions,
             "confidence": result.confidence,
-            "fallback_demo_data_usage": {
-                "using_demo_data": True,
+            "data_source": {
+                "nba_stats_csv": nba_stats_csv_display_path(),
+                "league_config_dir": "data/nba",
+                "using_synthetic_players": False,
                 "fallback_flags": state.fallback_flags,
                 "live_espn_enrichment_enabled": bool(state.trace_metadata.get("live_espn_enrichment_enabled")),
                 "nba_api_enrichment_enabled": bool(state.trace_metadata.get("nba_api_enrichment_enabled")),
@@ -42,19 +45,27 @@ class DeliveryAgent:
             "approval_status": state.approval_status.model_dump(),
             "trace": build_trace_snapshot(state),
         }
-        markdown_summary = "\n".join(
+        md_lines = [
+            "# FanDraGen Result",
+        ]
+        if state.trace_metadata.get("gemini_enrichment_applied"):
+            md_lines.append(
+                "**Gemini polish:** The summary and rationale below were rewritten for readability only. "
+                "The pick, scores, and figures still come entirely from tools—not from separate LLM “decisions.”"
+            )
+        md_lines.extend(
             [
-                "# FanDraGen Result",
                 f"**Recommendation:** {result.recommendations[0].title if result.recommendations else result.summary}",
                 f"**Rationale:** {'; '.join(result.rationale) if result.rationale else 'No rationale available.'}",
                 f"**Assumptions:** {'; '.join(result.assumptions) if result.assumptions else 'No special assumptions.'}",
                 f"**Confidence:** {result.confidence:.2f}",
-                f"**Fallback/demo-data usage:** Demo mode active; flags={state.fallback_flags or ['none']}",
+                f"**Data source:** NBA stats CSV + league templates under data/nba; flags={state.fallback_flags or ['none']}",
                 f"**Approval required:** {state.approval_status.approval_required}",
                 f"**Proposed action:** {state.approval_status.proposed_action or 'None'}",
                 "**Action execution:** No real account action is performed in this prototype.",
             ]
         )
+        markdown_summary = "\n".join(md_lines)
         final = FinalResponse(json_payload=json_payload, markdown_summary=markdown_summary)
         state.final_delivery_payload = final
         log_event(state, "delivery_complete", approval_required=approval_required)

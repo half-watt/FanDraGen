@@ -1,7 +1,7 @@
 """Live NBA statistics via `nba_api` (stats.nba.com endpoints).
 
-Maps fantasy `player_id` values from `data/demo/nba_player_map.json` to real
-`PERSON_ID` values, then pulls game logs for the configured season.
+Maps fantasy `player_id` values from optional `data/nba/nba_player_map.json` (or
+`kaggle_nba_person_id` on each row) to real `PERSON_ID` values, then pulls game logs for the configured season.
 
 See: https://github.com/swar/nba_api
 """
@@ -44,7 +44,12 @@ def _fetch_playergamelog_snapshot(nba_player_id: int, season: str) -> dict[str, 
         return None
 
     try:
-        gl = playergamelog.PlayerGameLog(player_id=str(nba_player_id), season=season)
+        # stats.nba.com can be slow; default nba_api timeout is 30s.
+        gl = playergamelog.PlayerGameLog(
+            player_id=str(nba_player_id),
+            season=season,
+            timeout=90,
+        )
         df = gl.get_data_frames()[0]
     except Exception as exc:
         logger.warning("nba_api PlayerGameLog failed for id=%s season=%s: %s", nba_player_id, season, exc)
@@ -79,7 +84,7 @@ def merge_demo_rows_with_nba(
     state: WorkflowState,
     data_dir: Path,
 ) -> list[dict[str, Any]]:
-    """Attach real NBA game-log averages to demo CSV rows when `FANDRAGEN_NBA_API=1`."""
+    """Attach real NBA game-log averages to player rows when `FANDRAGEN_NBA_API=1`."""
 
     if not nba_api_enabled():
         return list(rows)
@@ -95,16 +100,23 @@ def merge_demo_rows_with_nba(
         pid = row.get("player_id")
         entry = players_map.get(pid) if pid else None
         out: dict[str, Any] = dict(row)
-        if not entry:
+        nba_id: int | None = None
+        mapped_name = ""
+        if entry:
+            nba_id = int(entry["nba_player_id"])
+            mapped_name = str(entry.get("nba_full_name") or "")
+        elif (row.get("kaggle_nba_person_id") or "").strip().isdigit():
+            nba_id = int(str(row["kaggle_nba_person_id"]).strip())
+            mapped_name = str(row.get("player_name") or "")
+        if nba_id is None:
             merged.append(out)
             continue
-        nba_id = int(entry["nba_player_id"])
         snap = _fetch_playergamelog_snapshot(nba_id, season)
         if snap:
             ok += 1
             out.update(snap)
-            out["nba_mapped_full_name"] = entry.get("nba_full_name", "")
-            # Blend demo fantasy projection with NBA scoring signal (same scale ~25–55).
+            out["nba_mapped_full_name"] = mapped_name
+            # Blend table projection with NBA scoring signal (same scale ~25–55).
             try:
                 demo_proj = float(row.get("projected_points", 0))
                 nba_signal = float(snap["nba_pts_last10_avg"]) * 1.15

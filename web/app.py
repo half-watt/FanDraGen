@@ -15,6 +15,7 @@ import streamlit as st
 
 from utils.env import gemini_api_key, live_espn_enabled, load_env, nba_api_enabled
 from utils.file_utils import read_yaml
+from utils.nba_data_source import resolve_nba_stats_csv_path
 from utils.logging_utils import summarize_logs
 from utils.trace_utils import build_trace_snapshot
 from workflows.orchestrator import WorkflowOrchestrator
@@ -74,20 +75,41 @@ def main() -> None:
     espn_on = live_espn_enabled()
     nba_on = nba_api_enabled()
 
+    try:
+        nba_csv_path = str(resolve_nba_stats_csv_path())
+        nba_csv_ok = True
+    except FileNotFoundError as exc:
+        nba_csv_path = ""
+        nba_csv_ok = False
+        nba_csv_exc = str(exc)
+
     with st.sidebar:
         st.markdown("### Session")
         st.markdown(
-            f'<span class="pill pill-on">Demo data</span>'
+            f'<span class="pill {"pill-on" if nba_csv_ok else "pill-off"}">NBA CSV: {"ok" if nba_csv_ok else "missing"}</span>'
             f'<span class="pill {"pill-on" if gemini_on else "pill-off"}">Gemini: {"on" if gemini_on else "off"}</span>'
             f'<span class="pill {"pill-on" if espn_on else "pill-off"}">ESPN live: {"on" if espn_on else "off"}</span>'
             f'<span class="pill {"pill-on" if nba_on else "pill-off"}">nba_api: {"on" if nba_on else "off"}</span>',
             unsafe_allow_html=True,
         )
-        st.caption("`.env`: `GEMINI_API_KEY`, `FANDRAGEN_LIVE_ESPN=1`, `FANDRAGEN_NBA_API=1`, `NBA_STATS_SEASON`.")
+        st.caption(
+            "`.env`: `FANDRAGEN_KAGGLE_NBA_CSV`, `GEMINI_API_KEY`, `GEMINI_MODEL`, "
+            "`FANDRAGEN_LIVE_ESPN=1`, `FANDRAGEN_NBA_API=1`, `NBA_STATS_SEASON`."
+        )
+        if nba_csv_ok:
+            st.caption(nba_csv_path)
 
         st.markdown("### Scenario")
         st.caption(str(demo.get("scenario_name", "")))
         st.caption(str(demo.get("calendar_window", "")))
+
+        if not nba_csv_ok:
+            st.error(
+                "Missing NBA stats CSV. Download the Kaggle 24/25 file and save it as "
+                "`data/kaggle/nba_player_stats_2425.csv`, or set `FANDRAGEN_KAGGLE_NBA_CSV` in `.env`.\n\n"
+                f"{nba_csv_exc}"
+            )
+            return
 
         st.markdown("### Quick prompts")
         for i, p in enumerate(prompts):
@@ -156,7 +178,7 @@ def main() -> None:
         else:
             st.json({"error": "no final payload"})
 
-    fd = final.json_payload.get("fallback_demo_data_usage", {}) if final else {}
+    fd = final.json_payload.get("data_source", {}) if final else {}
     if fd.get("gemini_enrichment_applied"):
         st.success("Gemini polish was applied (see `gemini_enrichment_applied` in Raw JSON).")
 

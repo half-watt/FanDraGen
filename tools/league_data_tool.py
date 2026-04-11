@@ -1,4 +1,4 @@
-"""Mocked league-data tool backed by local demo files."""
+"""League-data tool: roster slots filled from the NBA stats pool plus local league files."""
 
 from __future__ import annotations
 
@@ -6,7 +6,8 @@ from pathlib import Path
 
 from schemas.models import LeagueContext, ToolResult, WorkflowState
 from tools.base import BaseTool
-from utils.file_utils import demo_path, missing_fields, read_csv, read_json
+from utils.file_utils import league_data_path, missing_fields, read_csv, read_json
+from utils.nba_data_source import get_free_agent_rows, get_roster_rows
 
 
 class LeagueDataTool(BaseTool):
@@ -15,27 +16,27 @@ class LeagueDataTool(BaseTool):
     tool_name = "LeagueDataTool"
 
     def __init__(self, data_dir: Path | None = None) -> None:
-        self.data_dir = data_dir or demo_path()
+        self.data_dir = data_dir or league_data_path()
 
     def fetch_rosters(self, state: WorkflowState) -> ToolResult:
-        rows = read_csv(self.data_dir / "rosters.csv")
+        rows = get_roster_rows(self.data_dir)
         result = ToolResult(
             tool_name=self.tool_name,
             method_name="fetch_rosters",
             data=rows,
-            supporting_points=[f"Loaded {len(rows)} roster assignments from demo data."],
+            supporting_points=[f"Loaded {len(rows)} roster assignments from local league data."],
             summary="Loaded roster assignments.",
             missing_fields=missing_fields(rows, ["fantasy_team_id", "player_id", "roster_slot"]),
         )
         return self._record(state, "fetch_rosters", {}, result)
 
     def fetch_free_agents(self, state: WorkflowState) -> ToolResult:
-        rows = read_csv(self.data_dir / "free_agents.csv")
+        rows = get_free_agent_rows(self.data_dir)
         result = ToolResult(
             tool_name=self.tool_name,
             method_name="fetch_free_agents",
             data=rows,
-            supporting_points=[f"Loaded {len(rows)} free-agent ids from demo data."],
+            supporting_points=[f"Loaded {len(rows)} free-agent ids from local league data."],
             summary="Loaded free-agent pool.",
             missing_fields=missing_fields(rows, ["player_id"]),
         )

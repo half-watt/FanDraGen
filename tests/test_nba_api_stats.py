@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from schemas.models import UserQuery, WorkflowState
-from utils.file_utils import demo_path
+from utils.file_utils import league_data_path
 
 
 @pytest.fixture
@@ -36,10 +36,50 @@ def test_merge_attaches_nba_fields_when_enabled(enable_nba_api: object) -> None:
     with patch.object(nba_api_stats, "_fetch_playergamelog_snapshot", return_value=fake):
         nba_api_stats.clear_nba_cache_for_tests()
         state = WorkflowState(original_user_query=UserQuery(text="test"))
-        rows = [{"player_id": "p001", "player_name": "Luka Vance", "projected_points": "40", "recent_points_avg": "38"}]
-        out = nba_api_stats.merge_demo_rows_with_nba(rows, state, demo_path())
+        rows = [
+            {
+                "player_id": "kg_00001",
+                "player_name": "Test Player",
+                "projected_points": "40",
+                "recent_points_avg": "38",
+                "kaggle_nba_person_id": "1629029",
+            }
+        ]
+        out = nba_api_stats.merge_demo_rows_with_nba(rows, state, league_data_path())
     assert out[0].get("nba_pts_last10_avg") == 28.0
     assert "effective_projected_points" in out[0]
+
+
+def test_merge_uses_kaggle_nba_person_id_when_not_in_map(enable_nba_api: object) -> None:
+    from integrations import nba_api_stats
+
+    fake = {
+        "nba_source": "nba_api.playergamelog",
+        "nba_season": "2024-25",
+        "nba_player_id": 203507,
+        "nba_games_in_log": 5,
+        "nba_pts_last10_avg": 28.0,
+        "nba_reb_last10_avg": 7.0,
+        "nba_ast_last10_avg": 8.0,
+        "nba_pts_season_avg": 27.0,
+        "nba_reb_season_avg": 7.0,
+        "nba_ast_season_avg": 8.0,
+    }
+    with patch.object(nba_api_stats, "_fetch_playergamelog_snapshot", return_value=fake):
+        nba_api_stats.clear_nba_cache_for_tests()
+        state = WorkflowState(original_user_query=UserQuery(text="test"))
+        rows = [
+            {
+                "player_id": "kg_00001",
+                "player_name": "Top Player Omega",
+                "projected_points": "40",
+                "recent_points_avg": "38",
+                "kaggle_nba_person_id": "203507",
+            }
+        ]
+        out = nba_api_stats.merge_demo_rows_with_nba(rows, state, league_data_path())
+    assert out[0].get("nba_pts_last10_avg") == 28.0
+    assert out[0].get("nba_mapped_full_name") == "Top Player Omega"
 
 
 def test_merge_noop_when_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -52,6 +92,6 @@ def test_merge_noop_when_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
     nba_api_stats.clear_nba_cache_for_tests()
     state = WorkflowState(original_user_query=UserQuery(text="test"))
     rows = [{"player_id": "p001", "player_name": "Luka Vance", "projected_points": "40", "recent_points_avg": "38"}]
-    out = nba_api_stats.merge_demo_rows_with_nba(rows, state, demo_path())
+    out = nba_api_stats.merge_demo_rows_with_nba(rows, state, league_data_path())
     assert len(out) == 1
     assert "nba_source" not in out[0]
