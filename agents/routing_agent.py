@@ -20,6 +20,18 @@ class RoutingAgent:
         "missing data / fallback explanation": ["assumptions", "missing data", "fallback"],
     }
 
+    #: More specific intents are matched before generic onboarding/help (which includes "new").
+    intent_priority: tuple[str, ...] = (
+        "missing data / fallback explanation",
+        "explanation / why reasoning",
+        "roster news summary",
+        "waiver/free agent pickup",
+        "trade evaluation",
+        "lineup optimization",
+        "draft advice",
+        "onboarding/help",
+    )
+
     nba_keywords = ["nba", "basketball", "lineup", "roster", "waiver", "draft", "trade", "league"]
 
     def route(self, query: UserQuery, state: WorkflowState) -> RouteDecision:
@@ -28,16 +40,17 @@ class RoutingAgent:
         lowered = query.text.lower()
         matched_intent = "onboarding/help"
         confidence = 0.62
-        for intent, keywords in self.intent_keywords.items():
+        for intent in self.intent_priority:
+            keywords = self.intent_keywords[intent]
             if any(keyword in lowered for keyword in keywords):
                 matched_intent = intent
-                confidence = 0.9 if len(keywords) == 1 or any(keyword in lowered for keyword in keywords[:2]) else 0.8
+                confidence = 0.9 if intent != "onboarding/help" else 0.78
                 break
 
         supported_demo_intents = set(self.intent_keywords.keys())
         domain = "nba" if any(keyword in lowered for keyword in self.nba_keywords) or matched_intent in supported_demo_intents else "general"
         route_target = "NBABossAgent" if domain == "nba" else "OnboardingAgent"
-        reasoning = f"Matched intent '{matched_intent}' using deterministic keyword rules; domain={domain}."
+        reasoning = f"Matched intent '{matched_intent}' using deterministic keyword rules (priority order); domain={domain}."
         decision = RouteDecision(
             intent=matched_intent,
             domain=domain,

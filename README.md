@@ -1,6 +1,6 @@
 # FanDraGen
 
-FanDraGen is a research-demo-grade, local-first NBA fantasy sports assistant scaffold. It is designed to demonstrate multi-agent orchestration, explicit shared state, tool usage, evaluator behavior, fallback handling, simulated approval checkpoints, traceability, and deterministic testing without relying on external APIs.
+FanDraGen is a research-demo-grade, local-first NBA fantasy sports assistant scaffold. It demonstrates multi-agent orchestration, explicit shared state, tool usage, evaluator behavior, fallback handling, simulated approval checkpoints, and traceability. **Core demos use deterministic `data/demo` files** so tests and CI stay keyless. **Optional integrations** can enrich outputs: public ESPN JSON (no key) and an optional Gemini API key for natural-language polish that still relies on attached tool evidence.
 
 The primary implementation is plain Python. An optional LangGraph mirror layer is included to show how the same workflow could be expressed as a stateful graph, but the core system runs entirely without LangGraph.
 
@@ -65,6 +65,7 @@ FanDraGen/
     memory_tool.py
   workflows/
     orchestrator.py
+    intent_registry.py
     onboarding_workflow.py
     draft_workflow.py
     lineup_workflow.py
@@ -83,7 +84,11 @@ FanDraGen/
     agent_prompts.py
     evaluator_prompts.py
     delivery_prompts.py
+  integrations/
+    espn_nba.py
   utils/
+    env.py
+    gemini_enrichment.py
     logging_utils.py
     trace_utils.py
     file_utils.py
@@ -165,6 +170,15 @@ python main.py
 .\run_tests.ps1
 ```
 
+### Environment variables (optional)
+
+Copy `.env.example` to `.env` locally (never commit `.env`).
+
+| Variable | Purpose |
+|----------|---------|
+| `GEMINI_API_KEY` | If set, the boss may rewrite summary/rationale for readability **after** evaluators pass, using only tool evidence already attached. If unset, behavior stays fully deterministic. |
+| `FANDRAGEN_LIVE_ESPN` | Set to `1` or `true` to merge **live** NBA headlines and a small standings snapshot from ESPN public JSON into `NewsTool` / `PlayerStatsTool` results. Roster and player rows remain demo CSV/JSON. If ESPN is unreachable, a fallback flag is recorded and demo data still drives recommendations. |
+
 ## How Shared State Moves Through The System
 
 1. `WorkflowOrchestrator` creates `WorkflowState` from the incoming query.
@@ -190,12 +204,14 @@ Fallback behavior is explicit:
 
 ## What Is Mocked
 
-- League rosters, standings, matchups, scoring rules, and free agents.
-- Player stats, projections, and news.
-- Recommendation scoring.
+- League rosters, matchups, scoring rules, and free agents (CSV/JSON under `data/demo/`).
+- Player stat rows, projections, and curated news used for ranking and explanations.
+- Recommendation scoring (heuristic in `tools/recommendation_tool.py`, with injury/status penalties).
 - User memory persistence.
-- Human approval checkpoints.
+- Human approval checkpoints (simulated; no real platform execution).
 - LangGraph integration, unless the optional dependency is installed.
+
+Optional **live ESPN** snippets supplement context only; they do not replace fictional roster rows unless you extend the data layer.
 
 ## Current Recommendation Engine
 
@@ -226,8 +242,8 @@ The scoring seam is isolated in `_score_player`, making it straightforward to re
 ## How To Replace Mocked Tools With Real APIs Later
 
 1. Preserve the existing method names on each tool wrapper.
-2. Swap file-backed internals for HTTP or SDK-backed implementations.
-3. Continue returning `ToolResult` so evaluators and delivery stay unchanged.
+2. Swap file-backed internals for HTTP or SDK-backed implementations (see `integrations/espn_nba.py` for a no-key JSON example).
+3. Continue returning `ToolResult` (and optional `enrichment`) so evaluators and delivery stay unchanged.
 4. Preserve tool call logging in `BaseTool._record`.
 5. Keep fallback behavior explicit when external data is unavailable.
 

@@ -65,6 +65,7 @@ class ToolResult(BaseModel):
     fallback_used: bool = False
     missing_fields: list[str] = Field(default_factory=list)
     summary: str = ""
+    enrichment: dict[str, Any] | None = None
 
 
 class LeagueContext(BaseModel):

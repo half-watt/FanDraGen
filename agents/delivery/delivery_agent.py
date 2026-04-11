@@ -34,6 +34,9 @@ class DeliveryAgent:
             "fallback_demo_data_usage": {
                 "using_demo_data": True,
                 "fallback_flags": state.fallback_flags,
+                "live_espn_enrichment_enabled": bool(state.trace_metadata.get("live_espn_enrichment_enabled")),
+                "gemini_configured": bool(state.trace_metadata.get("gemini_configured")),
+                "gemini_enrichment_applied": bool(state.trace_metadata.get("gemini_enrichment_applied")),
             },
             "approval_status": state.approval_status.model_dump(),
             "trace": build_trace_snapshot(state),

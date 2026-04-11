@@ -35,6 +35,18 @@ class RecommendationTool(BaseTool):
                 return float(item["sentiment_delta"])
         return 0.0
 
+    def _status_penalty(self, row: dict[str, str]) -> float:
+        """Late-season injury / rest risk from demo status column."""
+
+        status = (row.get("status") or "healthy").lower()
+        if status in {"out", "doubtful"}:
+            return 12.0
+        if status == "questionable":
+            return 5.5
+        if status == "probable":
+            return 2.0
+        return 0.0
+
     def _score_player(self, row: dict[str, str], roster_need_weight: float = 0.0) -> float:
         projected = float(row["projected_points"])
         recent = float(row["recent_points_avg"])
@@ -42,12 +54,14 @@ class RecommendationTool(BaseTool):
         matchup = int(row["matchup_difficulty"])
         base_sentiment = float(row["sentiment_score"])
         news_bonus = self._news_delta(row["player_name"])
+        status_penalty = self._status_penalty(row)
         return (
-            projected * 0.50
-            + recent * 0.25
-            + (base_sentiment + news_bonus) * 10 * 0.10
-            + (6 - matchup) * 2.5 * 0.10
-            - injury * 4.5
+            projected * 0.48
+            + recent * 0.24
+            + (base_sentiment + news_bonus) * 10 * 0.11
+            + (6 - matchup) * 2.5 * 0.09
+            - injury * 4.2
+            - status_penalty * 0.35
             + roster_need_weight
         )
 
@@ -94,7 +108,7 @@ class RecommendationTool(BaseTool):
                 f"Matchup difficulty: {top['matchup_difficulty']}",
             ],
             assumptions=["This assumes standard head-to-head points scoring from the demo rules."],
-            supporting_evidence=["Heuristic ranking from deterministic demo data."],
+            supporting_evidence=["RecommendationTool.rank_players", "RecommendationTool.recommend_draft_pick", "demo players.csv"],
         )
         result = ToolResult(
             tool_name=self.tool_name,
@@ -115,6 +129,8 @@ class RecommendationTool(BaseTool):
                     **roster_row,
                     "player_name": player["player_name"],
                     "position": player["position"],
+                    "matchup_difficulty": int(player["matchup_difficulty"]),
+                    "status": player["status"],
                     "heuristic_score": round(self._score_player(player), 2),
                 }
             )
@@ -151,7 +167,7 @@ class RecommendationTool(BaseTool):
                 f"{give_player} score: {round(give_score, 2)}",
             ],
             assumptions=["The trade is evaluated as a one-for-one points-league swap."],
-            supporting_evidence=["Trade delta computed from the heuristic engine."],
+            supporting_evidence=["RecommendationTool.evaluate_trade", "PlayerStatsTool.fetch_player_stats", "demo players.csv"],
         )
         result = ToolResult(
             tool_name=self.tool_name,
@@ -179,7 +195,7 @@ class RecommendationTool(BaseTool):
                 f"News sentiment: {top['sentiment_score']}",
             ],
             assumptions=["Assumes waiver priority is available in mocked mode."],
-            supporting_evidence=["Free-agent ranking from deterministic demo data."],
+            supporting_evidence=["RecommendationTool.rank_players", "RecommendationTool.recommend_waiver_pickup", "LeagueDataTool.fetch_free_agents"],
         )
         result = ToolResult(
             tool_name=self.tool_name,
