@@ -1,0 +1,25 @@
+app:
+  name: FanDraGen
+  mode: mocked
+  sport: NBA
+  require_approval_for:
+    - draft advice
+    - lineup optimization
+    - trade evaluation
+    - waiver/free agent pickup
+demo:
+  scenario_name: Final week before fantasy playoffs in the 2024-25 NBA season
+  calendar_window: 2025-04-07 to 2025-04-13
+  default_prompt_index: 0
+  player_aliases:
+    Player A: Luka Vance
+    Player B: Tariq Cole
+  prompts:
+    - I am new to fantasy basketball. How does this league work?
+    - Who should I draft first from the available player pool?
+    - Set my best lineup for this week.
+    - Should I trade Player A for Player B?
+    - Who is the best waiver pickup right now?
+    - Summarize important news for my roster.
+    - Why did you rank these players this way?
+    - What assumptions are you making because data is missing?

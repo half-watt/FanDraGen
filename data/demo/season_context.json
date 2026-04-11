@@ -1,0 +1,12 @@
+{
+  "scenario_name": "Final week before fantasy playoffs",
+  "nba_season": "2024-25",
+  "calendar_window": "2025-04-07 to 2025-04-13",
+  "description": "This mocked dataset represents the last week of the regular season before a fantasy NBA playoff bracket begins.",
+  "narrative_signals": [
+    "late-season rest risk",
+    "playoff seeding pressure",
+    "streaming value on waivers",
+    "volatile rotation changes"
+  ]
+}

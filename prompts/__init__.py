@@ -1,0 +1,1 @@
+"""Prompt scaffolds used as documentation-friendly constants."""

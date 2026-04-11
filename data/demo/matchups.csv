@@ -1,0 +1,3 @@
+fantasy_team_id,opponent_team_id,week,projected_total,opponent_strength
+team_001,team_002,24,229,strong
+team_002,team_001,24,223,medium

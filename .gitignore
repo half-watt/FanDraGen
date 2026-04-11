@@ -1,0 +1,15 @@
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.coverage
+.mypy_cache/
+.ruff_cache/
+.vscode/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+data/demo/user_memory.json

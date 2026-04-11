@@ -1,0 +1,56 @@
+{
+  "player_news": [
+    {
+      "player_name": "DeAndre Knox",
+      "team": "LAL",
+      "tag": "probable injury",
+      "summary": "Knox is listed as probable with a minor ankle issue, and the Lakers may trim his workload with the playoffs one week away.",
+      "sentiment_delta": -0.35
+    },
+    {
+      "player_name": "Caleb Frost",
+      "team": "MIA",
+      "tag": "role increase",
+      "summary": "Frost has picked up second-unit creation duties and his minutes are rising as Miami sharpens its playoff rotation.",
+      "sentiment_delta": 0.45
+    },
+    {
+      "player_name": "Darius Wynn",
+      "team": "HOU",
+      "tag": "minutes restriction",
+      "summary": "Wynn is expected to be limited if active after returning from a hamstring issue during the final week before fantasy playoffs.",
+      "sentiment_delta": -0.40
+    },
+    {
+      "player_name": "Luka Vance",
+      "team": "DAL",
+      "tag": "hot streak",
+      "summary": "Vance has topped 45 fantasy points in three straight contests as Dallas pushes to improve playoff seeding.",
+      "sentiment_delta": 0.30
+    },
+    {
+      "player_name": "Marcus Vale",
+      "team": "MIL",
+      "tag": "back-to-back fatigue concern",
+      "summary": "Vale is on the second night of a back-to-back and could see slightly lower usage with postseason preservation in mind.",
+      "sentiment_delta": -0.15
+    },
+    {
+      "player_name": "Zion Mercer",
+      "team": "IND",
+      "tag": "good matchup",
+      "summary": "Mercer draws a favorable interior matchup against a weak rebounding frontcourt in a must-win late-season stretch.",
+      "sentiment_delta": 0.25
+    }
+  ],
+  "team_news": [
+    {
+      "team": "LAL",
+      "summary": "Los Angeles is managing frontcourt minutes carefully in the final regular-season week before the fantasy playoff bracket starts."
+    },
+    {
+      "team": "MIA",
+      "summary": "Miami's bench rotation tightened as the club locks in playoff seeding, increasing Caleb Frost's reliability."
+    }
+  ]
+}

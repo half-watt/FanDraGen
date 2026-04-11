@@ -1,0 +1,16 @@
+player_id,player_name,sport,team,position,status,projected_points,recent_points_avg,injury_flag,sentiment_score,matchup_difficulty
+p001,Luka Vance,NBA,DAL,PG,healthy,50,48,0,0.82,2
+p002,Jalen Hart,NBA,BOS,SG,healthy,45,43,0,0.42,3
+p003,Marcus Vale,NBA,MIL,SF,healthy,40,38,0,0.22,4
+p004,DeAndre Knox,NBA,LAL,PF,probable,35,34,1,-0.25,3
+p005,Tariq Cole,NBA,PHX,C,healthy,47,45,0,0.62,2
+p006,Owen Price,NBA,NYK,PG,healthy,34,35,0,0.24,1
+p007,Elijah Stone,NBA,CLE,SG,healthy,36,39,0,0.48,2
+p008,Mason Reed,NBA,OKC,SF,healthy,30,28,0,0.08,4
+p009,Victor Hale,NBA,DEN,PF,healthy,27,29,0,-0.12,5
+p010,Noah Banks,NBA,SAC,C,healthy,29,28,0,0.18,3
+p011,Caleb Frost,NBA,MIA,SG,healthy,31,33,0,0.75,1
+p012,Andre Barlow,NBA,MIN,PF,healthy,28,29,0,0.43,2
+p013,Zion Mercer,NBA,IND,C,healthy,35,36,0,0.57,2
+p014,Darius Wynn,NBA,HOU,PG,questionable,24,23,1,-0.25,4
+p015,Kellan Brooks,NBA,ATL,SF,healthy,33,31,0,0.18,2
