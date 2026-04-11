@@ -139,6 +139,19 @@ Those are described in detail in `docs/WORKSTREAMS.md`, including first tasks, d
 
 ## Install And Run
 
+### Quick start (macOS / Linux, with Make)
+
+One-time setup, then run:
+
+```bash
+make setup
+make run
+```
+
+Other targets: `make test`, `make sample N=3`, `make prompt P="Who is the best waiver pickup?"`, `make help`.
+
+### Manual setup (any OS)
+
 1. Create and activate a Python environment.
 2. Install dependencies:
 
