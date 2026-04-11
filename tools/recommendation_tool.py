@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from integrations.nba_api_stats import merge_demo_rows_with_nba
 from schemas.models import Recommendation, ToolResult, WorkflowState
 from tools.base import BaseTool
 from utils.file_utils import demo_path, read_csv, read_json
@@ -23,8 +24,11 @@ class RecommendationTool(BaseTool):
     def __init__(self, data_dir: Path | None = None) -> None:
         self.data_dir = data_dir or demo_path()
 
-    def _load_players(self) -> list[dict[str, str]]:
-        return read_csv(self.data_dir / "players.csv")
+    def _load_players(self, state: WorkflowState | None = None) -> list[dict[str, Any]]:
+        rows = read_csv(self.data_dir / "players.csv")
+        if state is not None:
+            return merge_demo_rows_with_nba(rows, state, self.data_dir)
+        return rows
 
     def _load_news(self) -> list[dict[str, Any]]:
         return read_json(self.data_dir / "news.json")["player_news"]
@@ -47,9 +51,9 @@ class RecommendationTool(BaseTool):
             return 2.0
         return 0.0
 
-    def _score_player(self, row: dict[str, str], roster_need_weight: float = 0.0) -> float:
-        projected = float(row["projected_points"])
-        recent = float(row["recent_points_avg"])
+    def _score_player(self, row: dict[str, Any], roster_need_weight: float = 0.0) -> float:
+        projected = float(row.get("effective_projected_points") or row["projected_points"])
+        recent = float(row.get("effective_recent_points_avg") or row["recent_points_avg"])
         injury = int(row["injury_flag"])
         matchup = int(row["matchup_difficulty"])
         base_sentiment = float(row["sentiment_score"])
@@ -72,7 +76,7 @@ class RecommendationTool(BaseTool):
         roster_need_by_position: dict[str, float] | None = None,
     ) -> ToolResult:
         roster_need_by_position = roster_need_by_position or {}
-        rows = self._load_players()
+        rows = self._load_players(state)
         if player_ids:
             wanted = set(player_ids)
             rows = [row for row in rows if row["player_id"] in wanted]
@@ -81,11 +85,14 @@ class RecommendationTool(BaseTool):
             score = self._score_player(row, roster_need_by_position.get(row["position"], 0.0))
             ranked.append({**row, "heuristic_score": round(score, 2)})
         ranked.sort(key=lambda row: row["heuristic_score"], reverse=True)
+        rp = "Ranking uses projected points, recent form, injury, matchup, and news."
+        if any(r.get("nba_source") for r in ranked):
+            rp += " Live NBA last-10 game logs (nba_api) are blended into projections when enabled."
         result = ToolResult(
             tool_name=self.tool_name,
             method_name="rank_players",
             data=ranked,
-            supporting_points=["Ranking uses projected points, recent form, injury, matchup, and news sentiment."],
+            supporting_points=[rp],
             summary=f"Ranked {len(ranked)} players using heuristic scoring.",
         )
         return self._record(state, "rank_players", {"player_ids": player_ids or []}, result)
@@ -120,7 +127,7 @@ class RecommendationTool(BaseTool):
         return self._record(state, "recommend_draft_pick", {"player_ids": player_ids}, result)
 
     def suggest_lineup(self, state: WorkflowState, roster_rows: list[dict[str, str]]) -> ToolResult:
-        players = {row["player_id"]: row for row in self._load_players()}
+        players = {row["player_id"]: row for row in self._load_players(state)}
         ranked = []
         for roster_row in roster_rows:
             player = players[roster_row["player_id"]]
@@ -147,7 +154,7 @@ class RecommendationTool(BaseTool):
         return self._record(state, "suggest_lineup", {"roster_size": len(roster_rows)}, result)
 
     def evaluate_trade(self, state: WorkflowState, give_player: str, receive_player: str) -> ToolResult:
-        players = {row["player_name"]: row for row in self._load_players()}
+        players = {row["player_name"]: row for row in self._load_players(state)}
         give = players[give_player]
         receive = players[receive_player]
         give_score = self._score_player(give)

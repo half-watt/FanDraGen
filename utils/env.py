@@ -40,6 +40,8 @@ def _flags() -> dict[str, bool | str]:
     return {
         "live_espn": os.getenv("FANDRAGEN_LIVE_ESPN", "").strip().lower() in {"1", "true", "yes"},
         "gemini_key": os.getenv("GEMINI_API_KEY", "").strip(),
+        "nba_api": os.getenv("FANDRAGEN_NBA_API", "").strip().lower() in {"1", "true", "yes"},
+        "nba_season": os.getenv("NBA_STATS_SEASON", "").strip(),
     }
 
 
@@ -53,3 +55,16 @@ def gemini_api_key() -> str:
     """Google AI Studio / Gemini API key for optional rationale polish."""
 
     return str(_flags()["gemini_key"])
+
+
+def nba_api_enabled() -> bool:
+    """When True, merge live stats.nba.com data via ``nba_api`` (see integrations/nba_api_stats)."""
+
+    return bool(_flags()["nba_api"])
+
+
+def nba_stats_season() -> str | None:
+    """Override season for PlayerGameLog, e.g. ``2024-25``. Falls back to ``nba_player_map.json``."""
+
+    s = _flags()["nba_season"]
+    return s if s else None

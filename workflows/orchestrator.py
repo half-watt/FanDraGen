@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from schemas.models import UserQuery, WorkflowState
-from utils.env import gemini_api_key, live_espn_enabled, load_env
+from utils.env import gemini_api_key, live_espn_enabled, load_env, nba_api_enabled
 from utils.file_utils import read_yaml
 from utils.logging_utils import log_event
 from utils.metrics import update_metrics
@@ -32,6 +32,7 @@ class WorkflowOrchestrator:
             calendar_window=config["demo"]["calendar_window"],
             live_espn_enrichment_enabled=live_espn_enabled(),
             gemini_configured=bool(gemini_api_key()),
+            nba_api_enrichment_enabled=nba_api_enabled(),
         )
         route = self.router.route(query, state)
         if route.route_target == "NBABossAgent":

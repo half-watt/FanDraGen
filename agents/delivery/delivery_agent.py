@@ -35,6 +35,7 @@ class DeliveryAgent:
                 "using_demo_data": True,
                 "fallback_flags": state.fallback_flags,
                 "live_espn_enrichment_enabled": bool(state.trace_metadata.get("live_espn_enrichment_enabled")),
+                "nba_api_enrichment_enabled": bool(state.trace_metadata.get("nba_api_enrichment_enabled")),
                 "gemini_configured": bool(state.trace_metadata.get("gemini_configured")),
                 "gemini_enrichment_applied": bool(state.trace_metadata.get("gemini_enrichment_applied")),
             },

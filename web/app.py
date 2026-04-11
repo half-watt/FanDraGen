@@ -13,7 +13,7 @@ os.chdir(ROOT)
 
 import streamlit as st
 
-from utils.env import gemini_api_key, live_espn_enabled, load_env
+from utils.env import gemini_api_key, live_espn_enabled, load_env, nba_api_enabled
 from utils.file_utils import read_yaml
 from utils.logging_utils import summarize_logs
 from utils.trace_utils import build_trace_snapshot
@@ -72,16 +72,18 @@ def main() -> None:
     load_env()
     gemini_on = bool(gemini_api_key())
     espn_on = live_espn_enabled()
+    nba_on = nba_api_enabled()
 
     with st.sidebar:
         st.markdown("### Session")
         st.markdown(
             f'<span class="pill pill-on">Demo data</span>'
             f'<span class="pill {"pill-on" if gemini_on else "pill-off"}">Gemini: {"on" if gemini_on else "off"}</span>'
-            f'<span class="pill {"pill-on" if espn_on else "pill-off"}">ESPN live: {"on" if espn_on else "off"}</span>',
+            f'<span class="pill {"pill-on" if espn_on else "pill-off"}">ESPN live: {"on" if espn_on else "off"}</span>'
+            f'<span class="pill {"pill-on" if nba_on else "pill-off"}">nba_api: {"on" if nba_on else "off"}</span>',
             unsafe_allow_html=True,
         )
-        st.caption("Configure `.env`: `GEMINI_API_KEY`, optionally `FANDRAGEN_LIVE_ESPN=1`.")
+        st.caption("`.env`: `GEMINI_API_KEY`, `FANDRAGEN_LIVE_ESPN=1`, `FANDRAGEN_NBA_API=1`, `NBA_STATS_SEASON`.")
 
         st.markdown("### Scenario")
         st.caption(str(demo.get("scenario_name", "")))

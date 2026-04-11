@@ -76,6 +76,7 @@ FanDraGen/
     models.py
   data/
     demo/
+      nba_player_map.json
   configs/
     default_config.yaml
   prompts/
@@ -86,6 +87,7 @@ FanDraGen/
     delivery_prompts.py
   integrations/
     espn_nba.py
+    nba_api_stats.py
   utils/
     env.py
     gemini_enrichment.py
@@ -206,6 +208,8 @@ Copy `.env.example` to `.env` locally (never commit `.env`).
 |----------|---------|
 | `GEMINI_API_KEY` | If set, the boss may rewrite summary/rationale for readability **after** evaluators pass, using only tool evidence already attached. Implemented with the supported **`google-genai`** SDK. If unset, behavior stays fully deterministic. |
 | `FANDRAGEN_LIVE_ESPN` | Set to `1` or `true` to merge **live** NBA headlines and a small standings snapshot from ESPN public JSON into `NewsTool` / `PlayerStatsTool` results. Roster and player rows remain demo CSV/JSON. If ESPN is unreachable, a fallback flag is recorded and demo data still drives recommendations. |
+| `FANDRAGEN_NBA_API` | Set to `1` to pull **real** per-game stats from stats.nba.com using the [`nba_api`](https://github.com/swar/nba_api) package. Fantasy names stay the same; [`data/demo/nba_player_map.json`](data/demo/nba_player_map.json) maps each `player_id` to an NBA `PERSON_ID`. `PlayerStatsTool` and `RecommendationTool` blend last-10 PTS/REB/AST with demo projections. First run may take longer (HTTP + rate limits). |
+| `NBA_STATS_SEASON` | Optional season string for game logs, e.g. `2024-25`. Defaults to `season_default` in `nba_player_map.json`. |
 | `FANDRAGEN_DEBUG` | Set to `1` for more verbose logs (including Gemini enrichment diagnostics). |
 
 Enrichment failures are logged to stderr at **INFO**/**WARNING** (e.g. model errors or JSON parse issues) so `gemini_enrichment_applied: false` is explainable without silent failures.
