@@ -24,4 +24,5 @@ def build_trace_snapshot(state: WorkflowState) -> dict[str, Any]:
         "revision_count": state.revision_count,
         "approval_status": state.approval_status.model_dump(),
         "metrics": state.metrics,
+        "trace_metadata": state.trace_metadata,
     }

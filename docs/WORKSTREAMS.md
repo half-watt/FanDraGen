@@ -98,7 +98,7 @@ Right now this means mock data quality, retrieval quality, and tool readiness fo
 
 ### Primary Folders
 
-- `data/demo/`
+- `data/nba/` and `data/kaggle/` (NBA stats CSV)
 - `tools/league_data_tool.py`
 - `tools/player_stats_tool.py`
 - `tools/news_tool.py`
@@ -107,7 +107,7 @@ Right now this means mock data quality, retrieval quality, and tool readiness fo
 
 ### What This Person Should Do First
 
-1. Read every file under `data/demo/`.
+1. Read league templates under `data/nba/` and the NBA stats CSV path from `utils/nba_data_source.py`.
 2. Check whether the data story feels like the final week before fantasy playoffs.
 3. Compare tool methods to the data files they load.
 4. Identify fields that would matter if the team later swaps in a real API.
@@ -197,7 +197,7 @@ This prototype does not currently train a model. In this workstream, “training
 These workstreams are separate, but some changes will overlap. Use these rules:
 
 1. If you need to change `schemas/models.py`, tell the architecture owner first.
-2. If you need to change `data/demo/`, tell the data owner and update tests if behavior changes.
+2. If you need to change `data/nba/` or the stats CSV schema, tell the data owner and update tests if behavior changes.
 3. If you need to change `README.md` or `docs/`, coordinate with the eval/demo owner.
 4. If you need to change a public tool method, notify both the agents/tools owner and the data owner.
 

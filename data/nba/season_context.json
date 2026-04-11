@@ -1,0 +1,18 @@
+{
+  "scenario_name": "Final week before fantasy playoffs",
+  "nba_season": "2024-25",
+  "calendar_window": "2025-04-07 to 2025-04-13",
+  "description": "Last regular-season week before a head-to-head fantasy playoff bracket. Competing managers are locking seeds, managing minutes, and streaming categories where allowed.",
+  "narrative_signals": [
+    "late-season rest risk for stars on locked playoff seeds",
+    "must-win games for teams fighting to avoid the play-in",
+    "back-to-back fatigue and targeted minutes caps",
+    "waiver-wire streaming for threes, steals, and games-played volume",
+    "injury reports shifting from day-to-day to 'playoff preservation' language"
+  ],
+  "user_team_context": {
+    "fantasy_team_id": "team_001",
+    "playoff_position": "fighting_for_bye",
+    "games_remaining_regular_season": 1
+  }
+}

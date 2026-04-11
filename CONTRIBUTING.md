@@ -30,7 +30,7 @@ pip install -e .[dev]
 Use the repo by area, not by random file picking. The official workstream guide is in `docs/WORKSTREAMS.md`.
 
 - `agents/`: routing, worker behavior, evaluators, delivery
-- `tools/` and `data/demo/`: mocked data access, scoring logic, dataset quality
+- `tools/` and `data/nba/`: local league templates; NBA stats from Kaggle-format CSV
 - `workflows/` and `schemas/`: orchestration, state flow, contracts
 - `tests/`, `README.md`, and `docs/`: testing, documentation, polish, onboarding
 
@@ -101,7 +101,7 @@ If you are unsure where a change belongs:
 - how data is fetched or scored -> `tools/`
 - shared model or workflow state -> `schemas/`
 - orchestration and intent flow -> `workflows/`
-- scenario realism -> `data/demo/`
+- scenario realism -> `data/nba/season_context.json` and the stats CSV
 - confidence in changes -> `tests/`
 - team understanding -> `README.md` or `docs/`
 

@@ -7,7 +7,7 @@ from typing import Any
 
 from schemas.models import ToolResult, WorkflowState
 from tools.base import BaseTool
-from utils.file_utils import demo_path, read_json, write_json
+from utils.file_utils import league_data_path, read_json, write_json
 
 
 class MemoryTool(BaseTool):
@@ -16,7 +16,7 @@ class MemoryTool(BaseTool):
     tool_name = "MemoryTool"
 
     def __init__(self, data_dir: Path | None = None) -> None:
-        self.data_dir = data_dir or demo_path()
+        self.data_dir = data_dir or league_data_path()
         self.memory_path = self.data_dir / "user_memory.json"
 
     def _load(self) -> dict[str, Any]:
@@ -30,7 +30,7 @@ class MemoryTool(BaseTool):
             tool_name=self.tool_name,
             method_name="store_user_preferences",
             data=payload,
-            supporting_points=["Stored demo preferences locally."],
+            supporting_points=["Stored preferences locally."],
             summary="Stored user preferences.",
         )
         return self._record(state, "store_user_preferences", {"preferences": preferences}, result)
@@ -41,7 +41,7 @@ class MemoryTool(BaseTool):
             tool_name=self.tool_name,
             method_name="load_user_preferences",
             data=payload,
-            supporting_points=["Loaded demo preferences from local memory."],
+            supporting_points=["Loaded preferences from local memory."],
             summary="Loaded user preferences.",
         )
         return self._record(state, "load_user_preferences", {}, result)

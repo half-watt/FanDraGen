@@ -6,7 +6,7 @@ DELIVERY_GUIDANCE = {
         "rationale",
         "assumptions",
         "confidence",
-        "fallback/demo-data usage",
+        "data_source / fallback flags",
         "approval requirement",
     ]
 }

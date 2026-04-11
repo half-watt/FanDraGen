@@ -17,6 +17,10 @@ class OutputQualityEvaluator:
             issues.append("Summary is too short to be useful.")
         if any(keyword in query for keyword in ["draft", "lineup", "trade", "waiver"]) and not result.recommendations:
             issues.append("Recommendation-style request did not yield a structured recommendation.")
+        if "trade" in query and result.recommendations:
+            trade_rec = result.recommendations[0]
+            if "delta" not in trade_rec.details.lower() and "heuristic" not in trade_rec.details.lower():
+                issues.append("Trade evaluation should reference the computed delta or heuristic comparison in details.")
         if not result.rationale:
             issues.append("Result is missing rationale.")
         passed = not issues

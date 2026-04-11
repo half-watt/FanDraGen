@@ -6,7 +6,7 @@ from pathlib import Path
 
 from schemas.models import ToolResult, WorkflowState
 from tools.base import BaseTool
-from utils.file_utils import demo_path, read_json
+from utils.file_utils import league_data_path, read_json
 
 
 class RulesTool(BaseTool):
@@ -15,7 +15,7 @@ class RulesTool(BaseTool):
     tool_name = "RulesTool"
 
     def __init__(self, data_dir: Path | None = None) -> None:
-        self.data_dir = data_dir or demo_path()
+        self.data_dir = data_dir or league_data_path()
 
     def fetch_league_rules(self, state: WorkflowState) -> ToolResult:
         payload = read_json(self.data_dir / "league_rules.json")

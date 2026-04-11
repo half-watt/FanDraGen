@@ -12,8 +12,9 @@ from agents.general.news_summarization_agent import NewsSummarizationAgent
 from agents.general.onboarding_agent import OnboardingAgent
 from agents.general.trade_evaluation_agent import TradeEvaluationAgent
 from schemas.models import AgentResult, AgentTask, WorkflowState
+from utils.gemini_enrichment import enrich_summary_with_gemini
 from utils.logging_utils import log_event
-from workflows import draft_workflow, lineup_workflow, news_workflow, onboarding_workflow, trade_workflow, waiver_workflow
+from workflows.intent_registry import build_tasks_for_route
 
 
 class NBABossAgent(BaseBossAgent):
@@ -33,26 +34,25 @@ class NBABossAgent(BaseBossAgent):
         self.delivery_agent = DeliveryAgent()
 
     def _build_tasks(self, state: WorkflowState) -> list[AgentTask]:
-        intent = state.route_decision.intent if state.route_decision else "onboarding/help"
-        if intent == "onboarding/help":
-            return onboarding_workflow.build_tasks(state)
-        if intent in {"draft advice", "explanation / why reasoning"}:
-            return draft_workflow.build_tasks(state)
-        if intent == "lineup optimization":
-            return lineup_workflow.build_tasks(state)
-        if intent == "trade evaluation":
-            return trade_workflow.build_tasks(state)
-        if intent == "waiver/free agent pickup":
-            return waiver_workflow.build_tasks(state)
-        if intent == "roster news summary":
-            return news_workflow.build_tasks(state)
-        return [
-            AgentTask(
-                task_type="missing data / fallback explanation",
-                description="Explain fallback and missing-data behavior.",
-                assigned_agent="ManagingAgent",
-            )
-        ]
+        return build_tasks_for_route(state)
+
+    def _maybe_enrich_with_gemini(self, state: WorkflowState, result: AgentResult) -> AgentResult:
+        """Optional Gemini polish after evaluators; does not add new facts."""
+
+        snippets: list[str] = []
+        for tr in result.supporting_tool_results:
+            snippets.append(f"{tr.tool_name}.{tr.method_name}: {tr.summary}")
+            if tr.data is not None:
+                snippets.append(str(tr.data)[:2000])
+        enriched = enrich_summary_with_gemini(result.summary, result.rationale, snippets)
+        if not enriched:
+            return result
+        new_summary, new_rationale = enriched
+        updated = result.model_copy(deep=True)
+        updated.summary = new_summary
+        updated.rationale = new_rationale
+        state.trace_metadata["gemini_enrichment_applied"] = True
+        return updated
 
     def _evaluate(self, state: WorkflowState, result: AgentResult, attempt_number: int) -> list[str]:
         feedback = []
@@ -92,6 +92,7 @@ class NBABossAgent(BaseBossAgent):
             primary_result = worker.revise(tasks[0], primary_result, feedback, state)
             self._evaluate(state, primary_result, attempt_number=2)
 
+        primary_result = self._maybe_enrich_with_gemini(state, primary_result)
         self.delivery_agent.deliver(state, primary_result)
         log_event(state, "boss_complete", boss=self.boss_name)
         return primary_result

@@ -43,10 +43,10 @@ class ManagingAgent(BaseAgent):
 
         if task.task_type == "missing data / fallback explanation":
             if not state.fallback_flags:
-                state.add_fallback("missing_projection_source_in_demo_mode")
-            summary = "Explained the assumptions FanDraGen makes when demo data is missing or incomplete."
+                state.add_fallback("missing_projection_source_local_mode")
+            summary = "Explained the assumptions FanDraGen makes when local data is missing or incomplete."
             rationale = [
-                "The system stays in local demo mode and never invents external data sources.",
+                "The system uses the local NBA stats CSV and league files and does not invent external data sources.",
                 "When a file or field is missing, the workflow surfaces a fallback flag and uses the best available local evidence.",
             ]
             return AgentResult(
@@ -68,18 +68,33 @@ class ManagingAgent(BaseAgent):
         recommendation = Recommendation(
             item_id="lineup-week-18",
             title="Start the highest-scoring five rostered players",
-            details=f"Recommended starters: {', '.join(starter_names)}.",
+            details=(
+                f"Recommended starters: {', '.join(starter_names)}. "
+                f"Late-season context: prioritize healthy bodies, favorable matchups, and minutes stability "
+                f"before the fantasy playoff bracket."
+            ),
             confidence=0.82,
             score=float(starters[0]["heuristic_score"]),
             action_type="lineup optimization",
             approval_required=True,
             proposed_action=f"Set starters to {', '.join(starter_names)}.",
             rationale=[
-                f"{item['player_name']} grades as a {self.matchup_helper.explain_difficulty(2 if item['heuristic_score'] > 40 else 4)} by the heuristic engine."
-                for item in starters[:3]
+                (
+                    f"{item['player_name']}: {self.matchup_helper.explain_difficulty(int(item['matchup_difficulty']))} "
+                    f"(difficulty {item['matchup_difficulty']}/5), status={item.get('status', 'unknown')}, "
+                    f"heuristic={item['heuristic_score']}"
+                )
+                for item in starters
             ],
-            assumptions=["Lineup advice assumes one scoring period and no late injury changes beyond the demo news feed."],
-            supporting_evidence=["Lineup selected from deterministic roster and projection data."],
+            assumptions=[
+                "Lineup advice assumes one scoring period aligned with the demo calendar window.",
+                "Injury or rest news after lock is not modeled beyond the local news feed.",
+            ],
+            supporting_evidence=[
+                "LeagueDataTool.fetch_rosters",
+                "RecommendationTool.suggest_lineup",
+                "PlayerStatsTool.fetch_recent_form",
+            ],
         )
         return AgentResult(
             agent_name=self.agent_name,

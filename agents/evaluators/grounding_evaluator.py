@@ -14,8 +14,10 @@ class GroundingEvaluator:
         issues = []
         if not result.supporting_tool_results:
             issues.append("No tool outputs were attached to the result.")
-        if result.recommendations and not any(item.supporting_evidence for item in result.recommendations):
-            issues.append("Recommendation is missing supporting evidence.")
+        elif any(not tr.summary.strip() for tr in result.supporting_tool_results):
+            issues.append("A tool result is missing a summary, reducing auditability.")
+        if result.recommendations and not all(item.supporting_evidence for item in result.recommendations):
+            issues.append("One or more recommendations are missing supporting evidence.")
         if state.original_user_query.text.lower().startswith("what assumptions") and not result.assumptions:
             issues.append("Fallback explanation request did not surface explicit assumptions.")
         passed = not issues

@@ -23,5 +23,7 @@ PROMPTS = [
 def test_mock_mode_end_to_end(prompt: str) -> None:
     state = WorkflowOrchestrator().run(prompt)
     assert state.final_delivery_payload is not None
-    assert state.final_delivery_payload.json_payload["fallback_demo_data_usage"]["using_demo_data"] is True
+    ds = state.final_delivery_payload.json_payload["data_source"]
+    assert ds["using_synthetic_players"] is False
+    assert "nba_stats_csv" in ds
     assert state.metrics["task_completion_rate"] == 1.0

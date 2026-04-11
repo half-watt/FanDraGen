@@ -10,7 +10,7 @@ from tools.recommendation_tool import RecommendationTool
 
 
 class TradeEvaluationAgent(BaseAgent):
-    """Evaluates trade proposals in a deterministic demo-friendly way."""
+    """Evaluates trade proposals using local NBA stats and heuristics."""
 
     agent_name = "TradeEvaluationAgent"
 
@@ -22,8 +22,8 @@ class TradeEvaluationAgent(BaseAgent):
     def execute(self, task: AgentTask, state: WorkflowState) -> AgentResult:
         self._start(state, task)
         aliases = self.player_helper.resolve_aliases(state.original_user_query.text)
-        give_player = aliases.get("Player A", task.input_payload.get("give_player", "Luka Vance"))
-        receive_player = aliases.get("Player B", task.input_payload.get("receive_player", "Tariq Cole"))
+        give_player = aliases.get("Player A", task.input_payload.get("give_player", "Top Player Omega"))
+        receive_player = aliases.get("Player B", task.input_payload.get("receive_player", "Top Player Bravo"))
         stats_result = self.stats_tool.fetch_player_stats(state, [give_player, receive_player])
         trade_result = self.recommendation_tool.evaluate_trade(state, give_player, receive_player)
         recommendation = Recommendation(**trade_result.data)

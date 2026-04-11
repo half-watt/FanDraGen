@@ -7,7 +7,8 @@ from agents.nba.nba_player_context_helper import NBAPlayerContextHelper
 from schemas.models import AgentResult, AgentTask, WorkflowState
 from tools.league_data_tool import LeagueDataTool
 from tools.news_tool import NewsTool
-from utils.file_utils import demo_path, read_csv
+from utils.file_utils import league_data_path
+from utils.nba_data_source import load_players_table
 
 
 class NewsSummarizationAgent(BaseAgent):
@@ -25,7 +26,7 @@ class NewsSummarizationAgent(BaseAgent):
         rosters = self.league_data_tool.fetch_rosters(state)
         roster_rows = [row for row in rosters.data if row["fantasy_team_id"] == "team_001"]
         state.intermediate_outputs["roster_rows"] = roster_rows
-        player_rows = read_csv(demo_path("players.csv"))
+        player_rows = load_players_table(league_data_path())
         players_by_id = {row["player_id"]: row for row in player_rows}
         state.intermediate_outputs["players_by_id"] = players_by_id
         roster_names = self.player_helper.roster_player_names(state)
@@ -37,7 +38,7 @@ class NewsSummarizationAgent(BaseAgent):
             summary=summary,
             confidence=0.86,
             rationale=rationale,
-            assumptions=["Only roster-related news from the local demo feed is included."],
+            assumptions=["Only roster-related news from the local news feed is included."],
             supporting_tool_results=[rosters, player_news],
             structured_payload={"player_news": player_news.data},
         )

@@ -1,5 +1,5 @@
 {
-  "league_id": "demo_league_01",
+  "league_id": "nba_league_01",
   "sport": "NBA",
   "roster_slots": ["PG", "SG", "SF", "PF", "C", "UTIL", "BN"],
   "scoring_settings": {
@@ -10,7 +10,7 @@
     "blocks": 3,
     "turnovers": -1
   },
-  "trade_notes": "Trades process after commissioner review in this demo league.",
-  "waiver_notes": "Waiver priority resets weekly in mocked mode.",
+  "trade_notes": "Trades process after commissioner review in this league.",
+  "waiver_notes": "Waiver priority resets weekly in this configuration.",
   "lineup_lock_assumptions": "Lineups lock at the first scheduled game of the scoring period during the final week before fantasy playoffs."
 }
