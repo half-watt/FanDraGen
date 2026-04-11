@@ -1,3 +1,7 @@
 fantasy_team_id,opponent_team_id,week,projected_total,opponent_strength
-team_001,team_002,24,229,strong
-team_002,team_001,24,223,medium
+team_001,team_004,24,229,strong
+team_004,team_001,24,218,strong
+team_002,team_005,24,223,medium
+team_005,team_002,24,214,medium
+team_003,team_006,24,235,low
+team_006,team_003,24,209,strong
