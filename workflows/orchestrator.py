@@ -19,6 +19,21 @@ class WorkflowOrchestrator:
         self.router = RoutingAgent()
         self.nba_boss = NBABossAgent()
 
+    def _dispatch_route_target(self, route_target: str, state: WorkflowState) -> None:
+        """Dispatch to a known boss target or apply deterministic fallback."""
+
+        if route_target == "NBABossAgent":
+            self.nba_boss.run(state)
+            return
+        state.add_fallback(f"unsupported_route_target:{route_target}")
+        log_event(
+            state,
+            "route_target_fallback",
+            route_target=route_target,
+            fallback_target="NBABossAgent",
+        )
+        self.nba_boss.run(state)
+
     def run(self, query_text: str) -> WorkflowState:
         load_env()
         query = UserQuery(text=query_text)
@@ -35,11 +50,7 @@ class WorkflowOrchestrator:
             nba_api_enrichment_enabled=nba_api_enabled(),
         )
         route = self.router.route(query, state)
-        if route.route_target == "NBABossAgent":
-            self.nba_boss.run(state)
-        else:
-            state.add_fallback("non_nba_request_routed_to_general_help")
-            self.nba_boss.run(state)
+        self._dispatch_route_target(route.route_target, state)
         update_metrics(state)
         log_event(state, "workflow_complete", metrics=state.metrics)
         return state

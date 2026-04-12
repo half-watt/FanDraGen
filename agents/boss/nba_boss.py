@@ -36,6 +36,15 @@ class NBABossAgent(BaseBossAgent):
     def _build_tasks(self, state: WorkflowState) -> list[AgentTask]:
         return build_tasks_for_route(state)
 
+    def _fallback_task_for_missing_worker(self, missing_agent: str) -> AgentTask:
+        """Return a deterministic fallback task when a configured worker is missing."""
+
+        return AgentTask(
+            task_type="missing data / fallback explanation",
+            description=f"Fallback because assigned worker '{missing_agent}' was not configured.",
+            assigned_agent="ManagingAgent",
+        )
+
     def _maybe_enrich_with_gemini(self, state: WorkflowState, result: AgentResult) -> AgentResult:
         """Optional Gemini polish after evaluators; does not add new facts."""
 
@@ -78,18 +87,34 @@ class NBABossAgent(BaseBossAgent):
             "boss_decomposition",
             tasks=[task.model_dump() for task in tasks],
         )
-        aggregated_results = []
+        aggregated_results: list[AgentResult] = []
+        executed_tasks: list[AgentTask] = []
         for task in tasks:
-            worker = self.workers[task.assigned_agent]
+            worker = self.workers.get(task.assigned_agent)
+            if worker is None:
+                state.add_fallback(f"missing_worker:{task.assigned_agent}")
+                log_event(
+                    state,
+                    "boss_worker_fallback",
+                    missing_worker=task.assigned_agent,
+                    fallback_worker="ManagingAgent",
+                )
+                task = self._fallback_task_for_missing_worker(task.assigned_agent)
+                worker = self.workers[task.assigned_agent]
+            executed_tasks.append(task)
             aggregated_results.append(worker.execute(task, state))
+
+        if not aggregated_results:
+            raise RuntimeError("Boss decomposition produced no executable tasks.")
 
         primary_result = aggregated_results[0]
         state.intermediate_outputs["agent_results"] = [result.model_dump() for result in aggregated_results]
         feedback = self._evaluate(state, primary_result, attempt_number=1)
         if feedback and state.revision_count < 1:
             state.revision_count += 1
-            worker = self.workers[tasks[0].assigned_agent]
-            primary_result = worker.revise(tasks[0], primary_result, feedback, state)
+            primary_task = executed_tasks[0]
+            worker = self.workers[primary_task.assigned_agent]
+            primary_result = worker.revise(primary_task, primary_result, feedback, state)
             self._evaluate(state, primary_result, attempt_number=2)
 
         primary_result = self._maybe_enrich_with_gemini(state, primary_result)

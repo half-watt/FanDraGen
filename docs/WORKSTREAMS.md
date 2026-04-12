@@ -15,7 +15,6 @@ Own the overall flow of the system so the prototype remains coherent, stateful, 
 - `workflows/`
 - `schemas/`
 - `agents/boss/`
-- `langgraph_optional/`
 - parts of `utils/` related to trace and state flow
 
 ### What This Person Should Do First
@@ -31,14 +30,14 @@ Own the overall flow of the system so the prototype remains coherent, stateful, 
 - tighten route-to-workflow mapping
 - reduce duplication across workflow builders
 - improve trace metadata and orchestration logging
-- make the optional LangGraph layer mirror the plain Python flow more faithfully
+- keep the plain Python orchestration path simple and explicit
 
 ### Final Product Responsibilities
 
 - make sure all major user intents have a clean end-to-end path
 - ensure the system has a stable state contract that other teammates can build against
 - keep the architecture explainable in a final presentation
-- make sure the plain Python path remains the source of truth
+- keep the plain Python orchestration path clean, explicit, and maintainable
 
 ### Definition Of Done For This Workstream
 
@@ -46,6 +45,16 @@ Own the overall flow of the system so the prototype remains coherent, stateful, 
 - shared state is easy to inspect in logs and tests
 - boss-agent behavior is documented and covered by tests
 - no important flow logic is hidden inside random worker modules
+
+### Current Sprint Progress (Architecture)
+
+- centralized canonical intent keywords and priority in `workflows/intent_registry.py`, and aligned `agents/routing_agent.py` to import from that source
+- replaced intent routing condition chains with table-driven intent-to-workflow mapping and explicit unknown-intent fallback logging
+- reduced duplication across workflow builders with shared task helper in `workflows/task_builder.py`
+- tightened orchestrator dispatch with explicit route-target fallback metadata in `workflows/orchestrator.py`
+- added boss-agent guardrails for missing worker assignments in `agents/boss/nba_boss.py`
+- extended tests to cover mapping consistency and boss fallback behavior (`tests/test_intent_registry.py`, `tests/test_boss_agent.py`)
+- validated full suite in project venv: `31 passed`
 
 ## Workstream 2: Agents And Tools
 

@@ -6,7 +6,7 @@ The demo dataset represents the final week of the 2024-25 NBA regular season, im
 
 ## System Shape
 
-The plain Python workflow is the source of truth:
+The workflow is implemented in plain Python:
 
 1. route the user query
 2. decompose the task in the NBA boss agent
@@ -30,10 +30,18 @@ This project is meant for a team and for a class demo. Hidden state would make i
 - `agents/delivery/` controls final output shape.
 - `workflows/` maps intents to tasks.
 
+## Orchestration Contracts (Workstream 1)
+
+- Canonical intent keywords and priority now live in `workflows/intent_registry.py`.
+- `agents/routing_agent.py` imports those canonical definitions so routing and task-building stay in sync.
+- `workflows/intent_registry.py` uses a table-driven mapping (`intent -> workflow builder`) instead of a long conditional chain.
+- Unknown intents are handled by one explicit fallback task and a fallback flag (`unknown_intent:<intent>`) for traceability.
+- `workflows/orchestrator.py` routes known boss targets directly and logs deterministic fallback dispatch for unsupported targets.
+- `agents/boss/nba_boss.py` guards against missing worker assignments and falls back to a safe explanation task instead of crashing.
+
 ## Future Improvements
 
 - swap the heuristic scorer with a trained model
 - add richer roster-need logic
-- expand the optional LangGraph mirror into a real runnable graph
 - add stricter static analysis in CI
 - replace mocked tools with real APIs without changing the state contracts

@@ -2,9 +2,19 @@
 
 FanDraGen is a research-grade, local-first NBA fantasy sports assistant scaffold. It demonstrates multi-agent orchestration, explicit shared state, tool usage, evaluator behavior, fallback handling, simulated approval checkpoints, and traceability. **Player stats come from a required Kaggle-format NBA season CSV** (see `data/kaggle/` and `utils/nba_data_source.py`). League structure (rules, matchups, roster slot pattern) lives under **`data/nba/`**. **Optional integrations** can enrich outputs: public ESPN JSON (no key) and an optional Gemini API key for natural-language polish that still relies on attached tool evidence.
 
-The primary implementation is plain Python. An optional LangGraph mirror layer is included to show how the same workflow could be expressed as a stateful graph, but the core system runs entirely without LangGraph.
+The implementation is plain Python end to end.
 
 The current mock scenario is the final week of the 2024-25 NBA regular season, immediately before fantasy playoffs begin. That gives the demo a clear late-season context instead of a generic basketball dataset.
+
+## Latest Sprint Update (Workstream 1)
+
+- centralized canonical intent keywords and priority in `workflows/intent_registry.py`, with `agents/routing_agent.py` importing from that source
+- replaced route-to-workflow condition chains with table-driven intent mapping plus explicit unknown-intent fallback logging
+- reduced duplication across workflow builders using shared helper in `workflows/task_builder.py`
+- tightened orchestrator route-target fallback metadata in `workflows/orchestrator.py`
+- added boss-agent guardrails for missing worker assignments in `agents/boss/nba_boss.py`
+- extended coverage in `tests/test_intent_registry.py` and `tests/test_boss_agent.py`
+- validated full suite in project venv: 31 passed
 
 ## Purpose
 
@@ -28,7 +38,6 @@ The system keeps state explicit through `WorkflowState` in `schemas/models.py`. 
 - `agents/delivery/delivery_agent.py`: Formats final JSON and markdown output and marks simulated approval requirements.
 - `tools/*`: Mocked tool wrappers for league data, stats, news, rules, recommendations, and local memory.
 - `workflows/*`: Intent-specific workflow builders and the main orchestrator.
-- `langgraph_optional/*`: Optional mirror layer that reuses the same schemas and orchestration boundaries.
 
 ## Folder Structure
 
@@ -103,10 +112,6 @@ FanDraGen/
     kaggle_nba_loader.py
     nba_data_source.py
     metrics.py
-  langgraph_optional/
-    graph_state.py
-    graph_builder.py
-    graph_runner.py
   tests/
     conftest.py
     test_routing.py
@@ -254,7 +259,6 @@ Fallback behavior is explicit:
 - Recommendation scoring (heuristic in `tools/recommendation_tool.py`, with injury/status penalties).
 - User memory persistence (`data/nba/user_memory.json`, gitignored when customized).
 - Human approval checkpoints (simulated; no real platform execution).
-- LangGraph integration, unless the optional dependency is installed.
 
 Optional **live ESPN** snippets supplement context when enabled.
 
@@ -291,19 +295,6 @@ The scoring seam is isolated in `_score_player`, making it straightforward to re
 3. Continue returning `ToolResult` (and optional `enrichment`) so evaluators and delivery stay unchanged.
 4. Preserve tool call logging in `BaseTool._record`.
 5. Keep fallback behavior explicit when external data is unavailable.
-
-## Optional LangGraph Layer
-
-The `langgraph_optional` package mirrors the same boundaries used by the plain Python path:
-
-- routing node
-- boss node
-- worker or tool nodes
-- evaluator nodes
-- delivery node
-- approval node
-
-If LangGraph is not installed, the optional layer fails with a clear message while the plain Python workflow continues to run normally.
 
 ## Repo Hygiene And Tooling
 

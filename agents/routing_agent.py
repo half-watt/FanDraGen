@@ -4,33 +4,14 @@ from __future__ import annotations
 
 from schemas.models import RouteDecision, UserQuery, WorkflowState
 from utils.logging_utils import log_event
+from workflows.intent_registry import INTENT_KEYWORDS, INTENT_PRIORITY
 
 
 class RoutingAgent:
     """Classifies intent and routes NBA requests to the NBA boss agent."""
 
-    intent_keywords = {
-        "onboarding/help": ["new", "how does this league work", "help", "league work"],
-        "draft advice": ["draft", "draft first"],
-        "lineup optimization": ["best lineup", "set my best lineup", "lineup"],
-        "trade evaluation": ["trade"],
-        "waiver/free agent pickup": ["waiver", "pickup", "free agent"],
-        "roster news summary": ["news", "summarize important news"],
-        "explanation / why reasoning": ["why", "rank these players", "explain"],
-        "missing data / fallback explanation": ["assumptions", "missing data", "fallback"],
-    }
-
-    #: More specific intents are matched before generic onboarding/help (which includes "new").
-    intent_priority: tuple[str, ...] = (
-        "missing data / fallback explanation",
-        "explanation / why reasoning",
-        "roster news summary",
-        "waiver/free agent pickup",
-        "trade evaluation",
-        "lineup optimization",
-        "draft advice",
-        "onboarding/help",
-    )
+    intent_keywords = INTENT_KEYWORDS
+    intent_priority = INTENT_PRIORITY
 
     nba_keywords = ["nba", "basketball", "lineup", "roster", "waiver", "draft", "trade", "league"]
 

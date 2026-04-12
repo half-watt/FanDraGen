@@ -28,9 +28,6 @@ dev = [
   "ruff>=0.11,<0.12",
   "mypy>=1.15,<1.16"
 ]
-langgraph = [
-  "langgraph>=0.2,<0.3"
-]
 
 [tool.setuptools]
 include-package-data = true
