@@ -38,6 +38,24 @@ class WorkflowOrchestrator:
         load_env()
         query = UserQuery(text=query_text)
         state = WorkflowState(original_user_query=query)
+        # Malicious input detection (simple keyword-based for now)
+        MALICIOUS_KEYWORDS = [
+            "drop table", "leak", "hack", "admin access", "sql injection", "bypass", "delete everything", "raw database", "phishing", "cheat", "exploit", "ignore previous instructions", "dangerous", "unsafe", "malicious"
+        ]
+        lowered = query_text.lower()
+        if any(kw in lowered for kw in MALICIOUS_KEYWORDS):
+            # Block and return explicit payload
+            state.final_delivery_payload = __import__("schemas.models", fromlist=["FinalResponse"]).FinalResponse(
+                json_payload={
+                    "blocked": True,
+                    "summary": "Blocked: Malicious or unsafe input detected. No action taken.",
+                },
+                markdown_summary="**Blocked:** Malicious or unsafe input detected. No action taken."
+            )
+            state.metrics["task_completion_rate"] = 0.0
+            state.add_fallback("blocked_malicious_input")
+            log_event(state, "blocked_malicious_input", query=query_text)
+            return state
         config = read_yaml(__import__("pathlib").Path("configs/default_config.yaml"))
         add_trace_metadata(
             state,

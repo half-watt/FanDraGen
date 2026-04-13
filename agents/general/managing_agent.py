@@ -30,15 +30,24 @@ class ManagingAgent(BaseAgent):
                 [row["player_id"] for row in free_agents.data],
             )
             recommendation = Recommendation(**pickup.data)
+            rationale = recommendation.rationale or ["See tool results for waiver pickup rationale."]
+            supporting_evidence = [
+                f"Waiver tool result: {pickup.data.get('player_name', 'N/A')} (score: {pickup.data.get('heuristic_score', 'N/A')})"
+            ]
+            # Safely handle missing 'player_name' in free_agents.data
+            agent_names = [row.get('player_name', row.get('name', 'N/A')) for row in free_agents.data[:5]]
+            supporting_evidence.append(f"Free agents considered: {', '.join(agent_names)} ...")
             return AgentResult(
                 agent_name=self.agent_name,
                 summary=pickup.summary,
                 confidence=0.81,
-                rationale=recommendation.rationale,
+                rationale=rationale,
                 assumptions=recommendation.assumptions,
                 recommendations=[recommendation],
                 supporting_tool_results=[free_agents, pickup],
                 structured_payload={"waiver_pickup": pickup.data},
+                approval_required=True,
+                supporting_evidence=supporting_evidence,
             )
 
         if task.task_type == "missing data / fallback explanation":
@@ -49,6 +58,7 @@ class ManagingAgent(BaseAgent):
                 "The system uses the local NBA stats CSV and league files and does not invent external data sources.",
                 "When a file or field is missing, the workflow surfaces a fallback flag and uses the best available local evidence.",
             ]
+            supporting_evidence = ["Fallback flags: " + ', '.join(state.fallback_flags)]
             return AgentResult(
                 agent_name=self.agent_name,
                 summary=summary,
@@ -56,6 +66,8 @@ class ManagingAgent(BaseAgent):
                 rationale=rationale,
                 assumptions=state.fallback_flags,
                 structured_payload={"fallback_flags": state.fallback_flags},
+                approval_required=False,
+                supporting_evidence=supporting_evidence,
             )
 
         roster_result = self.league_data_tool.fetch_rosters(state)

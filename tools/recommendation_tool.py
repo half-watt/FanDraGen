@@ -95,6 +95,7 @@ class RecommendationTool(BaseTool):
             data=ranked,
             supporting_points=[rp],
             summary=f"Ranked {len(ranked)} players using heuristic scoring.",
+            grounding=["data/nba/roster_template.csv", "data/nba/season_context.json", "RecommendationTool._score_player"]
         )
         return self._record(state, "rank_players", {"player_ids": player_ids or []}, result)
 
@@ -128,6 +129,7 @@ class RecommendationTool(BaseTool):
             data=recommendation.model_dump(),
             supporting_points=recommendation.rationale,
             summary=f"Recommended {top['player_name']} as the top draft pick.",
+            grounding=["RecommendationTool.rank_players", "RecommendationTool._score_player", "data/nba/roster_template.csv"]
         )
         return self._record(state, "recommend_draft_pick", {"player_ids": player_ids}, result)
 
@@ -155,6 +157,7 @@ class RecommendationTool(BaseTool):
             data={"starters": starters, "bench": bench},
             supporting_points=[f"Suggested lineup promotes the top {len(starters)} rostered scores."],
             summary="Suggested an optimized lineup.",
+            grounding=["RecommendationTool._score_player", "data/nba/roster_template.csv"]
         )
         return self._record(state, "suggest_lineup", {"roster_size": len(roster_rows)}, result)
 
@@ -191,6 +194,7 @@ class RecommendationTool(BaseTool):
             data=recommendation.model_dump(),
             supporting_points=recommendation.rationale,
             summary=f"Trade delta between {give_player} and {receive_player}: {delta}.",
+            grounding=["RecommendationTool._score_player", "PlayerStatsTool.fetch_player_stats", "data/nba/roster_template.csv"]
         )
         return self._record(state, "evaluate_trade", {"give_player": give_player, "receive_player": receive_player}, result)
 
@@ -219,5 +223,6 @@ class RecommendationTool(BaseTool):
             data=recommendation.model_dump(),
             supporting_points=recommendation.rationale,
             summary=f"Recommended {top['player_name']} as the top waiver pickup.",
+            grounding=["RecommendationTool.rank_players", "LeagueDataTool.fetch_free_agents", "data/nba/free_agents_template.csv"]
         )
         return self._record(state, "recommend_waiver_pickup", {"player_ids": player_ids}, result)

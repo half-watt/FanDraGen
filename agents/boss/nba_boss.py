@@ -109,13 +109,29 @@ class NBABossAgent(BaseBossAgent):
 
         primary_result = aggregated_results[0]
         state.intermediate_outputs["agent_results"] = [result.model_dump() for result in aggregated_results]
-        feedback = self._evaluate(state, primary_result, attempt_number=1)
-        if feedback and state.revision_count < 1:
+        max_revisions = 2
+        revision_attempt = 1
+        feedback = self._evaluate(state, primary_result, attempt_number=revision_attempt)
+        while feedback and state.revision_count < max_revisions:
             state.revision_count += 1
             primary_task = executed_tasks[0]
             worker = self.workers[primary_task.assigned_agent]
             primary_result = worker.revise(primary_task, primary_result, feedback, state)
-            self._evaluate(state, primary_result, attempt_number=2)
+            revision_attempt += 1
+            feedback = self._evaluate(state, primary_result, attempt_number=revision_attempt)
+
+        # If unresolved evaluator issues remain, surface them in the final output
+        if feedback:
+            if not hasattr(primary_result, "assumptions") or primary_result.assumptions is None:
+                primary_result.assumptions = []
+            primary_result.assumptions.append(
+                f"Unresolved evaluator issues after {max_revisions} revisions: {', '.join(feedback)}"
+            )
+            # Optionally, also append to rationale or summary for visibility
+            primary_result.rationale.append(
+                f"Evaluator feedback could not be fully resolved: {', '.join(feedback)}"
+            )
+            primary_result.summary += f" (Evaluator feedback could not be fully resolved after {max_revisions} attempts.)"
 
         primary_result = self._maybe_enrich_with_gemini(state, primary_result)
         self.delivery_agent.deliver(state, primary_result)

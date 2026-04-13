@@ -31,6 +31,7 @@ class DeliveryAgent:
             "summary": result.summary,
             "rationale": result.rationale,
             "assumptions": result.assumptions,
+            "supporting_evidence": getattr(result, "supporting_evidence", []),
             "confidence": result.confidence,
             "data_source": {
                 "nba_stats_csv": nba_stats_csv_display_path(),
@@ -47,24 +48,31 @@ class DeliveryAgent:
         }
         md_lines = [
             "# FanDraGen Result",
+            "",
+            "---",
         ]
         if state.trace_metadata.get("gemini_enrichment_applied"):
             md_lines.append(
                 "**Gemini polish:** The summary and rationale below were rewritten for readability only. "
                 "The pick, scores, and figures still come entirely from tools—not from separate LLM “decisions.”"
             )
-        md_lines.extend(
-            [
-                f"**Recommendation:** {result.recommendations[0].title if result.recommendations else result.summary}",
-                f"**Rationale:** {'; '.join(result.rationale) if result.rationale else 'No rationale available.'}",
-                f"**Assumptions:** {'; '.join(result.assumptions) if result.assumptions else 'No special assumptions.'}",
-                f"**Confidence:** {result.confidence:.2f}",
-                f"**Data source:** NBA stats CSV + league templates under data/nba; flags={state.fallback_flags or ['none']}",
-                f"**Approval required:** {state.approval_status.approval_required}",
-                f"**Proposed action:** {state.approval_status.proposed_action or 'None'}",
-                "**Action execution:** No real account action is performed in this prototype.",
-            ]
-        )
+        md_lines.extend([
+            f"**Recommendation:** {result.recommendations[0].title if result.recommendations else result.summary}",
+            f"**Rationale:** {'; '.join(result.rationale) if result.rationale else 'No rationale available.'}",
+            f"**Assumptions:** {'; '.join(result.assumptions) if result.assumptions else 'No special assumptions.'}",
+            f"**Supporting evidence:** {'; '.join(getattr(result, 'supporting_evidence', [])) if getattr(result, 'supporting_evidence', []) else 'No supporting evidence.'}",
+            f"**Confidence:** {result.confidence:.2f}",
+            f"**Data source:** NBA stats CSV + league templates under data/nba; flags={state.fallback_flags or ['none']}",
+            f"**Approval required:** {state.approval_status.approval_required}",
+            f"**Proposed action:** {state.approval_status.proposed_action or 'None'}",
+            "**Action execution:** No real account action is performed in this prototype.",
+        ])
+        # Surface unresolved evaluator issues if present
+        unresolved = [a for a in result.assumptions if a.startswith("Unresolved evaluator issues")] if hasattr(result, "assumptions") else []
+        if unresolved:
+            md_lines.append("")
+            md_lines.append("**:warning: Unresolved evaluator issues after all allowed revisions:**")
+            md_lines.extend([f"- {issue}" for issue in unresolved])
         markdown_summary = "\n".join(md_lines)
         final = FinalResponse(json_payload=json_payload, markdown_summary=markdown_summary)
         state.final_delivery_payload = final

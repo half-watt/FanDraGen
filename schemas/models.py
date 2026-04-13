@@ -66,6 +66,7 @@ class ToolResult(BaseModel):
     missing_fields: list[str] = Field(default_factory=list)
     summary: str = ""
     enrichment: dict[str, Any] | None = None
+    grounding: list[str] = Field(default_factory=list)
 
 
 class LeagueContext(BaseModel):
@@ -109,6 +110,8 @@ class AgentResult(BaseModel):
     recommendations: list[Recommendation] = Field(default_factory=list)
     supporting_tool_results: list[ToolResult] = Field(default_factory=list)
     structured_payload: dict[str, Any] = Field(default_factory=dict)
+    approval_required: bool = False
+    supporting_evidence: list[str] = Field(default_factory=list)
 
 
 class EvaluationResult(BaseModel):

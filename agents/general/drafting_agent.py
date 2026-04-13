@@ -27,19 +27,26 @@ class DraftingAgent(BaseAgent):
         player_ids = [row["player_id"] for row in free_agents.data]
         ranking_result = self.recommendation_tool.rank_players(state, player_ids=player_ids)
         top_three = ranking_result.data[:3]
+        stats_result = self.stats_tool.fetch_projections(state, [row["player_name"] for row in top_three])
         if task.task_type == "explanation / why reasoning":
             recommendations = []
             summary = "Explained the player ranking using the demo heuristic engine."
+            approval_required = False
         else:
             pick_result = self.recommendation_tool.recommend_draft_pick(state, player_ids)
             recommendations = [Recommendation(**pick_result.data)]
             summary = pick_result.summary
+            approval_required = True
 
         rationale = [
-            f"{row['player_name']} scored {row['heuristic_score']} with a {self.matchup_helper.explain_difficulty(int(row['matchup_difficulty']))}."
+            f"{row['player_name']} scored {row['heuristic_score']} (see ranking tool) with a {self.matchup_helper.explain_difficulty(int(row['matchup_difficulty']))}."
             for row in top_three
         ]
-        stats_result = self.stats_tool.fetch_projections(state, [row["player_name"] for row in top_three])
+        supporting_evidence = [
+            f"Ranking tool result: {row['player_name']} score {row['heuristic_score']} (rank {i+1})"
+            for i, row in enumerate(top_three)
+        ]
+        supporting_evidence.append(f"See stats tool projections for: {', '.join([row['player_name'] for row in top_three])}")
         return AgentResult(
             agent_name=self.agent_name,
             summary=summary,
@@ -49,4 +56,6 @@ class DraftingAgent(BaseAgent):
             recommendations=recommendations,
             supporting_tool_results=[ranking_result, stats_result],
             structured_payload={"ranked_players": ranking_result.data[:5]},
+            approval_required=approval_required,
+            supporting_evidence=supporting_evidence,
         )
