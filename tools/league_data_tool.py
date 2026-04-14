@@ -19,24 +19,24 @@ class LeagueDataTool(BaseTool):
         self.data_dir = data_dir or league_data_path()
 
     def fetch_rosters(self, state: WorkflowState) -> ToolResult:
-        rows = get_roster_rows(self.data_dir)
+        rows = get_roster_rows(self.data_dir, state=state)
         result = ToolResult(
             tool_name=self.tool_name,
             method_name="fetch_rosters",
             data=rows,
-            supporting_points=[f"Loaded {len(rows)} roster assignments from local league data."],
+            supporting_points=[f"Loaded {len(rows)} roster assignments from local league data (API/CSV fallback)."],
             summary="Loaded roster assignments.",
             missing_fields=missing_fields(rows, ["fantasy_team_id", "player_id", "roster_slot"]),
         )
         return self._record(state, "fetch_rosters", {}, result)
 
     def fetch_free_agents(self, state: WorkflowState) -> ToolResult:
-        rows = get_free_agent_rows(self.data_dir)
+        rows = get_free_agent_rows(self.data_dir, state=state)
         result = ToolResult(
             tool_name=self.tool_name,
             method_name="fetch_free_agents",
             data=rows,
-            supporting_points=[f"Loaded {len(rows)} free-agent ids from local league data."],
+            supporting_points=[f"Loaded {len(rows)} free-agent ids from local league data (API/CSV fallback)."],
             summary="Loaded free-agent pool.",
             missing_fields=missing_fields(rows, ["player_id"]),
         )

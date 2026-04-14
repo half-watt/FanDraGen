@@ -1,4 +1,69 @@
 {
-  "player_news": [],
-  "team_news": []
+  "player_news": [
+    {
+      "player_name": "LeBron James",
+      "headline": "Resting for playoff preparation",
+      "status": "Out",
+      "injury_detail": "Rest",
+      "team": "LAL",
+      "stat_projection": "0 pts, 0 reb, 0 ast (resting)",
+      "narrative": "Lakers have clinched a playoff spot; LeBron will rest in the final regular-season game."
+    },
+    {
+      "player_name": "Shai Gilgeous-Alexander",
+      "headline": "Probable for must-win game",
+      "status": "Questionable",
+      "injury_detail": "Right ankle soreness, expected to play",
+      "team": "OKC",
+      "stat_projection": "28 pts, 6 ast, 5 reb",
+      "narrative": "Thunder need a win to avoid the play-in; SGA expected to play through minor injury."
+    },
+    {
+      "player_name": "Jaren Jackson Jr.",
+      "headline": "Upgraded to active, minutes cap likely",
+      "status": "Active",
+      "injury_detail": "Returned from illness, may be limited",
+      "team": "MEM",
+      "stat_projection": "18 pts, 7 reb, 2 blk",
+      "narrative": "Grizzlies are out of playoff contention; JJJ will play but may see reduced minutes."
+    },
+    {
+      "player_name": "Nikola Jokić",
+      "headline": "Expected to play, team clinched #1 seed",
+      "status": "Active",
+      "injury_detail": "None",
+      "team": "DEN",
+      "stat_projection": "22 pts, 12 reb, 9 ast",
+      "narrative": "Nuggets have clinched the top seed; Jokić may see fewer minutes."
+    },
+    {
+      "player_name": "Cade Cunningham",
+      "headline": "Out for season finale (knee)",
+      "status": "Out",
+      "injury_detail": "Left knee soreness",
+      "team": "DET",
+      "stat_projection": "0 pts, 0 reb, 0 ast (injury)",
+      "narrative": "Pistons are eliminated; Cunningham will not play in the final game."
+    }
+  ],
+  "team_news": [
+    {
+      "team": "LAL",
+      "headline": "Lakers clinch playoff spot, resting starters",
+      "playoff_status": "Clinched",
+      "narrative": "Expect LeBron and AD to rest; bench players will see extended run."
+    },
+    {
+      "team": "OKC",
+      "headline": "Thunder in must-win scenario",
+      "playoff_status": "Fighting for play-in",
+      "narrative": "SGA and starters expected to play heavy minutes."
+    },
+    {
+      "team": "MEM",
+      "headline": "Grizzlies eliminated, youth movement",
+      "playoff_status": "Eliminated",
+      "narrative": "Young players and bench will get more minutes in finale."
+    }
+  ]
 }

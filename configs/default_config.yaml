@@ -12,8 +12,8 @@ demo:
   calendar_window: 2025-04-07 to 2025-04-13
   default_prompt_index: 0
   player_aliases:
-    Player A: Top Player Omega
-    Player B: Top Player Bravo
+    Player A: LeBron James
+    Player B: Nikola Jokić
   prompts:
     - I am new to fantasy basketball. How does this league work?
     - Who should I draft first from the available player pool?

@@ -22,18 +22,21 @@ class PlayerStatsTool(BaseTool):
     def __init__(self, data_dir: Path | None = None) -> None:
         self.data_dir = data_dir or league_data_path()
 
-    def _load_players(self) -> list[dict[str, str]]:
-        return load_players_table(self.data_dir)
+    def _load_players(self, state: WorkflowState | None = None) -> list[dict[str, str]]:
+        # Always use the new loader with fallback and injury status propagation
+        # If state is provided, allow nba_api enrichment; else, fallback to CSV only
+        return load_players_table(self.data_dir, state=state, enrich_nba_api=state is not None)
 
-    def _filter(self, player_names: Iterable[str] | None = None) -> list[dict[str, str]]:
-        rows = self._load_players()
+    def _filter(self, player_names: Iterable[str] | None = None, state: WorkflowState | None = None) -> list[dict[str, str]]:
+        rows = self._load_players(state)
         if not player_names:
             return rows
         wanted = {name.lower() for name in player_names}
         return [row for row in rows if row["player_name"].lower() in wanted]
 
+    # _merge_nba is now handled by load_players_table; keep for compatibility but unused
     def _merge_nba(self, rows: list[dict[str, str]], state: WorkflowState) -> list[dict[str, Any]]:
-        return merge_demo_rows_with_nba(rows, state, self.data_dir)
+        return rows
 
     def _maybe_live_enrichment(self, state: WorkflowState) -> tuple[dict[str, Any] | None, bool]:
         if not live_espn_enabled():
@@ -45,8 +48,7 @@ class PlayerStatsTool(BaseTool):
         return {"live_espn": standings, "note": "Live ESPN standings snapshot for late-season context."}, False
 
     def fetch_player_stats(self, state: WorkflowState, player_names: list[str] | None = None) -> ToolResult:
-        rows = self._filter(player_names)
-        rows = self._merge_nba(rows, state)
+        rows = self._filter(player_names, state)
         enrichment, live_fb = self._maybe_live_enrichment(state)
         row_missing = not bool(rows) and bool(player_names)
         nba_note = ""
@@ -68,8 +70,7 @@ class PlayerStatsTool(BaseTool):
         return self._record(state, "fetch_player_stats", {"player_names": player_names or []}, result, status=status)
 
     def fetch_recent_form(self, state: WorkflowState, player_names: list[str] | None = None) -> ToolResult:
-        rows = self._filter(player_names)
-        rows = self._merge_nba(rows, state)
+        rows = self._filter(player_names, state)
         enrichment, live_fb = self._maybe_live_enrichment(state)
         out = []
         for row in rows:
@@ -101,10 +102,9 @@ class PlayerStatsTool(BaseTool):
         )
 
     def fetch_projections(self, state: WorkflowState, player_names: list[str] | None = None) -> ToolResult:
-        base = self._filter(player_names)
-        merged = self._merge_nba(base, state)
+        base = self._filter(player_names, state)
         rows = []
-        for row in merged:
+        for row in base:
             entry = {
                 "player_name": row["player_name"],
                 "projected_points": float(row.get("effective_projected_points") or row["projected_points"]),

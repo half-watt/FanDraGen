@@ -77,19 +77,38 @@ def exit_if_nba_stats_csv_missing() -> None:
         raise SystemExit(2) from exc
 
 
-def load_players_table(_data_dir: Path | None = None) -> list[dict[str, str]]:
-    """Load all player rows from the NBA stats CSV (cached per resolved path)."""
+
+def load_players_table(_data_dir: Path | None = None, state=None, enrich_nba_api: bool = True) -> list[dict[str, str]]:
+    """Load all player rows from the NBA stats CSV, optionally enrich with nba_api (cached per resolved path)."""
 
     global _players_cache
     path = resolve_nba_stats_csv_path()
     key = str(path)
     if _players_cache and _players_cache[0] == key:
-        return list(_players_cache[1])
+        rows = list(_players_cache[1])
+    else:
+        rows = load_kaggle_players_csv(path)
+        _players_cache = (key, rows)
+        logger.info("Loaded %s NBA player rows from %s", len(rows), path)
 
-    rows = load_kaggle_players_csv(path)
-    _players_cache = (key, rows)
-    logger.info("Loaded %s NBA player rows from %s", len(rows), path)
-    return list(rows)
+    # Injury status propagation: ensure every row has 'injury_flag' and 'status'
+    for row in rows:
+        if "injury_flag" not in row:
+            row["injury_flag"] = "0"
+        if "status" not in row:
+            row["status"] = "Active"
+
+    # Optionally enrich with nba_api if enabled and requested
+    if enrich_nba_api and state is not None:
+        try:
+            from integrations.nba_api_stats import merge_demo_rows_with_nba
+            data_dir = _data_dir or (PROJECT_ROOT / "data/nba")
+            return merge_demo_rows_with_nba(rows, state, data_dir)
+        except Exception as exc:
+            logger.warning(f"nba_api enrichment failed, falling back to CSV only: {exc}")
+            # Fallback: just return CSV rows
+            return rows
+    return rows
 
 
 def _roster_and_free_agents_from_pool(players: list[dict[str, str]], data_dir: Path) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
@@ -116,14 +135,16 @@ def _roster_and_free_agents_from_pool(players: list[dict[str, str]], data_dir: P
     return roster_out, fa_out
 
 
-def get_roster_rows(data_dir: Path) -> list[dict[str, str]]:
-    players = load_players_table()
+
+def get_roster_rows(data_dir: Path, state=None) -> list[dict[str, str]]:
+    players = load_players_table(data_dir, state=state, enrich_nba_api=state is not None)
     roster_rows, _ = _roster_and_free_agents_from_pool(players, data_dir)
     return roster_rows
 
 
-def get_free_agent_rows(data_dir: Path) -> list[dict[str, str]]:
-    players = load_players_table()
+
+def get_free_agent_rows(data_dir: Path, state=None) -> list[dict[str, str]]:
+    players = load_players_table(data_dir, state=state, enrich_nba_api=state is not None)
     _, fa_rows = _roster_and_free_agents_from_pool(players, data_dir)
     return fa_rows
 
