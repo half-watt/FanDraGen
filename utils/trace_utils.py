@@ -13,6 +13,15 @@ def add_trace_metadata(state: WorkflowState, **metadata: Any) -> None:
     state.trace_metadata.update(metadata)
 
 
+def record_workflow_step(state: WorkflowState, step: str, **metadata: Any) -> None:
+    """Append a workflow step to trace metadata with optional details."""
+    if "workflow_steps" not in state.trace_metadata:
+        state.trace_metadata["workflow_steps"] = []
+    entry = {"step": step}
+    entry.update(metadata)
+    state.trace_metadata["workflow_steps"].append(entry)
+
+
 def build_trace_snapshot(state: WorkflowState) -> dict[str, Any]:
     """Create a compact trace payload for printing or tests."""
 

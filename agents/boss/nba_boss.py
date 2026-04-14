@@ -70,22 +70,42 @@ class NBABossAgent(BaseBossAgent):
             state.evaluator_results.append(evaluation_result)
             log_event(
                 state,
-                "evaluator_result",
-                evaluator=evaluation_result.evaluator_name,
-                passed=evaluation_result.passed,
-                issues=evaluation_result.issues,
+                event_type="evaluator_result",
+                agent="NBABossAgent",
+                tool="N/A",
+                status="success" if evaluation_result.passed else "error",
+                message=f"Evaluator {evaluation_result.evaluator_name} result: {'passed' if evaluation_result.passed else 'failed'}.",
+                details={
+                    "evaluator": evaluation_result.evaluator_name,
+                    "passed": evaluation_result.passed,
+                    "issues": evaluation_result.issues,
+                    "recommendations": evaluation_result.recommendations,
+                    "attempt_number": evaluation_result.attempt_number,
+                },
             )
             if not evaluation_result.passed:
                 feedback.extend(evaluation_result.issues + evaluation_result.recommendations)
         return feedback
 
     def run(self, state: WorkflowState) -> AgentResult:
-        log_event(state, "boss_start", boss=self.boss_name)
+        log_event(
+            state,
+            event_type="boss_start",
+            agent=self.boss_name,
+            tool="N/A",
+            status="info",
+            message=f"Boss agent {self.boss_name} started.",
+            details={},
+        )
         tasks = self._build_tasks(state)
         log_event(
             state,
-            "boss_decomposition",
-            tasks=[task.model_dump() for task in tasks],
+            event_type="boss_decomposition",
+            agent=self.boss_name,
+            tool="N/A",
+            status="info",
+            message=f"Boss agent {self.boss_name} decomposed workflow into tasks.",
+            details={"tasks": [task.model_dump() for task in tasks]},
         )
         aggregated_results: list[AgentResult] = []
         executed_tasks: list[AgentTask] = []
@@ -95,9 +115,12 @@ class NBABossAgent(BaseBossAgent):
                 state.add_fallback(f"missing_worker:{task.assigned_agent}")
                 log_event(
                     state,
-                    "boss_worker_fallback",
-                    missing_worker=task.assigned_agent,
-                    fallback_worker="ManagingAgent",
+                    event_type="boss_worker_fallback",
+                    agent=self.boss_name,
+                    tool="N/A",
+                    status="warning",
+                    message=f"Missing worker {task.assigned_agent}, falling back to ManagingAgent.",
+                    details={"missing_worker": task.assigned_agent, "fallback_worker": "ManagingAgent"},
                 )
                 task = self._fallback_task_for_missing_worker(task.assigned_agent)
                 worker = self.workers[task.assigned_agent]
@@ -135,5 +158,13 @@ class NBABossAgent(BaseBossAgent):
 
         primary_result = self._maybe_enrich_with_gemini(state, primary_result)
         self.delivery_agent.deliver(state, primary_result)
-        log_event(state, "boss_complete", boss=self.boss_name)
+        log_event(
+            state,
+            event_type="boss_complete",
+            agent=self.boss_name,
+            tool="N/A",
+            status="success",
+            message=f"Boss agent {self.boss_name} completed workflow.",
+            details={},
+        )
         return primary_result

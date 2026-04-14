@@ -23,21 +23,59 @@ class WorkflowOrchestrator:
         """Dispatch to a known boss target or apply deterministic fallback."""
 
         if route_target == "NBABossAgent":
+            from utils.trace_utils import record_workflow_step
+            record_workflow_step(state, "dispatch_boss_agent", route_target=route_target)
+            log_event(
+                state,
+                event_type="route_target_dispatched",
+                agent="WorkflowOrchestrator",
+                tool="N/A",
+                status="success",
+                message=f"Route target {route_target} dispatched successfully.",
+                details={"route_target": route_target},
+            )
             self.nba_boss.run(state)
             return
         state.add_fallback(f"unsupported_route_target:{route_target}")
+        from utils.trace_utils import record_workflow_step
+        record_workflow_step(state, "route_target_fallback", route_target=route_target)
         log_event(
             state,
-            "route_target_fallback",
-            route_target=route_target,
-            fallback_target="NBABossAgent",
+            event_type="route_target_fallback",
+            agent="WorkflowOrchestrator",
+            tool="N/A",
+            status="warning",
+            message=f"Route target {route_target} not supported, falling back to NBABossAgent.",
+            details={"route_target": route_target, "fallback_target": "NBABossAgent"},
         )
         self.nba_boss.run(state)
 
     def run(self, query_text: str) -> WorkflowState:
         load_env()
         query = UserQuery(text=query_text)
-        state = WorkflowState(original_user_query=query)
+        # Build the plan before creating the state
+        from workflows.intent_registry import build_tasks_for_route
+        temp_state = WorkflowState(original_user_query=query)
+        planned_route = self.router.route(query, temp_state)
+        from utils.trace_utils import record_workflow_step
+        record_workflow_step(temp_state, "route_decision", intent=planned_route.intent, route_target=planned_route.route_target)
+        temp_state.route_decision = planned_route
+        planned_tasks = build_tasks_for_route(temp_state)
+        plan = []
+        for task in planned_tasks:
+            plan.append({
+                "agent": task.assigned_agent,
+                "task_type": task.task_type,
+                "tools": task.requires_tools,
+                "description": task.description,
+            })
+        state = WorkflowState(original_user_query=query, original_plan=plan)
+        # Merge workflow_steps from temp_state into state
+        temp_steps = temp_state.trace_metadata.get("workflow_steps", [])
+        if temp_steps:
+            if "workflow_steps" not in state.trace_metadata:
+                state.trace_metadata["workflow_steps"] = []
+            state.trace_metadata["workflow_steps"].extend(temp_steps)
         # Malicious input detection (simple keyword-based for now)
         MALICIOUS_KEYWORDS = [
             "drop table", "leak", "hack", "admin access", "sql injection", "bypass", "delete everything", "raw database", "phishing", "cheat", "exploit", "ignore previous instructions", "dangerous", "unsafe", "malicious"
@@ -54,7 +92,16 @@ class WorkflowOrchestrator:
             )
             state.metrics["task_completion_rate"] = 0.0
             state.add_fallback("blocked_malicious_input")
-            log_event(state, "blocked_malicious_input", query=query_text)
+            record_workflow_step(state, "blocked_malicious_input")
+            log_event(
+                state,
+                event_type="blocked_malicious_input",
+                agent="WorkflowOrchestrator",
+                tool="N/A",
+                status="error",
+                message="Blocked malicious or unsafe input.",
+                details={"query": query_text},
+            )
             return state
         config = read_yaml(__import__("pathlib").Path("configs/default_config.yaml"))
         add_trace_metadata(
@@ -67,8 +114,20 @@ class WorkflowOrchestrator:
             gemini_configured=bool(gemini_api_key()),
             nba_api_enrichment_enabled=nba_api_enabled(),
         )
-        route = self.router.route(query, state)
-        self._dispatch_route_target(route.route_target, state)
+        record_workflow_step(state, "trace_metadata_injected")
+        # Set the route_decision on the real state
+        state.route_decision = planned_route
+        self._dispatch_route_target(planned_route.route_target, state)
+        record_workflow_step(state, "boss_agent_dispatched", route_target=planned_route.route_target)
         update_metrics(state)
-        log_event(state, "workflow_complete", metrics=state.metrics)
+        record_workflow_step(state, "metrics_updated")
+        log_event(
+            state,
+            event_type="workflow_complete",
+            agent="WorkflowOrchestrator",
+            tool="N/A",
+            status="success",
+            message="Workflow complete.",
+            details={"metrics": state.metrics},
+        )
         return state

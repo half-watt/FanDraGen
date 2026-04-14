@@ -142,8 +142,25 @@ class FinalResponse(BaseModel):
     markdown_summary: str
 
 
+# LogEvent: Structured log entry for workflow tracing
+class LogEvent(BaseModel):
+    event_type: str
+    agent: str
+    tool: str
+    status: str
+    message: str
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    details: dict[str, Any] = Field(default_factory=dict)
+
+
+
 class WorkflowState(BaseModel):
-    """Shared explicit state for the full workflow."""
+    """Shared explicit state for the full workflow.
+
+    original_plan: List[dict[str, Any]]
+        - List of expected actions (dicts with agent, task, tool, etc.) as planned by the orchestrator.
+        - Used for validating that the workflow follows the intended path and tools are called as expected.
+    """
 
     original_user_query: UserQuery
     route_decision: RouteDecision | None = None
@@ -154,22 +171,16 @@ class WorkflowState(BaseModel):
     fallback_flags: list[str] = Field(default_factory=list)
     final_delivery_payload: FinalResponse | None = None
     approval_status: ApprovalStatus = Field(default_factory=ApprovalStatus)
-    logs: list[dict[str, Any]] = Field(default_factory=list)
+    logs: list[LogEvent] = Field(default_factory=list)
     trace_metadata: dict[str, Any] = Field(default_factory=dict)
     league_context: LeagueContext | None = None
     metrics: dict[str, float | int] = Field(default_factory=dict)
     revision_count: int = 0
+    original_plan: list[dict[str, Any]] = Field(default_factory=list)
 
-    def log(self, event: str, details: dict[str, Any]) -> None:
-        """Append a structured log event to state."""
-
-        self.logs.append(
-            {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "event": event,
-                "details": details,
-            }
-        )
+    def log(self, log_event: LogEvent) -> None:
+        """Append a structured LogEvent to state."""
+        self.logs.append(log_event)
 
     def add_fallback(self, reason: str) -> None:
         """Record a fallback reason once."""

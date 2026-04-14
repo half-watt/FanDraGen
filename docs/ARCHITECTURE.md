@@ -4,17 +4,46 @@
 
 The demo dataset represents the final week of the 2024-25 NBA regular season, immediately before fantasy playoffs. This matters because the recommendation logic should feel like late-season decision support: seeding pressure, rest risk, role changes, waiver urgency, and lineup volatility.
 
-## System Shape
 
-The workflow is implemented in plain Python:
+## System Shape: Orchestration Flow
 
-1. route the user query
-2. decompose the task in the NBA boss agent
-3. call worker agents and tools
-4. evaluate quality and grounding
-5. allow one revision if needed
-6. deliver JSON and markdown
-7. mark simulated approval gating when actions are proposed
+The workflow is implemented in plain Python, with all major steps explicit and test-validated:
+
+1. **Route the user query** (via `RoutingAgent` and canonical intent registry)
+2. **Decompose the task** in the NBA boss agent (assigns worker agents and tools)
+3. **Call worker agents and tools** (task execution, tool invocation, and result collection)
+4. **Evaluate quality and grounding** (evaluator agents check outputs)
+5. **Allow one revision if needed** (revision loop, if evaluation fails)
+6. **Deliver JSON and markdown** (final response is structured and human-readable)
+7. **Mark simulated approval gating** when actions are proposed (approval status in state)
+
+### Orchestration Trace, Logging, and Metadata
+
+- Every major orchestration step records a trace metadata entry (`trace_metadata['workflow_steps']`)
+- Structured logs (`logs` field, `LogEvent` objects) are appended for all key events (dispatch, fallback, completion, errors)
+- Trace and logs are test-validated for coverage and order (see `test_trace_metadata.py`, `test_orchestration_logging.py`)
+
+### State Contract Enforcement and Testing
+
+- `WorkflowState` is the explicit contract for all orchestration, agent, and tool state
+- All fields are documented and type-checked (see `schemas/models.py`)
+- A dedicated test (`test_workflow_state_contract.py`) ensures the state can be fully serialized/deserialized with all fields populated, guarding against contract drift
+
+### How to Extend the System
+
+To add a new user intent or workflow:
+1. Add the intent and keywords to `workflows/intent_registry.py` (`INTENT_KEYWORDS`)
+2. Add the intent to `INTENT_PRIORITY` in the desired order
+3. Map the intent to a workflow builder in `INTENT_TO_WORKFLOW`
+4. Implement the workflow builder (see `workflows/`)
+5. Add or update tests to cover the new path
+
+To add a new agent or tool:
+1. Implement the agent/tool in the appropriate folder (`agents/`, `tools/`)
+2. Register the agent/tool in the relevant workflow builder
+3. Update tests and documentation as needed
+
+All changes to state contracts or orchestration logic should be accompanied by updated tests and, if needed, doc updates.
 
 ## Why Shared State Is Explicit
 

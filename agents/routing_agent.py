@@ -42,10 +42,16 @@ class RoutingAgent:
         state.route_decision = decision
         log_event(
             state,
-            "route_decision",
-            intent=decision.intent,
-            domain=decision.domain,
-            target=decision.route_target,
-            confidence=decision.confidence,
+            event_type="route_decision",
+            agent="RoutingAgent",
+            tool="N/A",
+            status="info",
+            message=f"Routing decision: intent={decision.intent}, domain={decision.domain}, target={decision.route_target}",
+            details={
+                "intent": decision.intent,
+                "domain": decision.domain,
+                "target": decision.route_target,
+                "confidence": decision.confidence,
+            },
         )
         return decision

@@ -22,7 +22,15 @@ class DeliveryAgent:
             checkpoint_reason="Recommendation-style output requires simulated human approval." if approval_required else "No approval required.",
         )
         if approval_required:
-            log_event(state, "approval_checkpoint", proposed_action=proposed_action)
+            log_event(
+                state,
+                event_type="approval_checkpoint",
+                agent="DeliveryAgent",
+                tool="N/A",
+                status="info",
+                message="Approval checkpoint reached.",
+                details={"proposed_action": proposed_action},
+            )
 
         json_payload = {
             "query": state.original_user_query.model_dump(mode="json"),
@@ -76,5 +84,13 @@ class DeliveryAgent:
         markdown_summary = "\n".join(md_lines)
         final = FinalResponse(json_payload=json_payload, markdown_summary=markdown_summary)
         state.final_delivery_payload = final
-        log_event(state, "delivery_complete", approval_required=approval_required)
+        log_event(
+            state,
+            event_type="delivery_complete",
+            agent="DeliveryAgent",
+            tool="N/A",
+            status="success",
+            message="Delivery complete.",
+            details={"approval_required": approval_required},
+        )
         return final

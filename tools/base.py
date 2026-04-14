@@ -34,10 +34,15 @@ class BaseTool(ABC):
         )
         log_event(
             state,
-            "tool_call",
+            event_type="tool_call",
+            agent="N/A",
             tool=self.tool_name,
-            method=method_name,
-            fallback=result.fallback_used,
-            summary=result.summary,
+            status="success" if status == "success" else "error",
+            message=f"Tool {self.tool_name}.{method_name} called.",
+            details={
+                "method": method_name,
+                "fallback": result.fallback_used,
+                "summary": result.summary,
+            },
         )
         return result

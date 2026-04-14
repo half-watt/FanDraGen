@@ -16,7 +16,15 @@ class BaseAgent(ABC):
     def _start(self, state: WorkflowState, task: AgentTask) -> None:
         if self.agent_name not in state.invoked_agents:
             state.invoked_agents.append(self.agent_name)
-        log_event(state, "agent_start", agent=self.agent_name, task=task.task_type)
+        log_event(
+            state,
+            event_type="agent_start",
+            agent=self.agent_name,
+            tool="N/A",
+            status="info",
+            message=f"Agent {self.agent_name} started task {task.task_type}",
+            details={"task": task.task_type},
+        )
 
     @abstractmethod
     def execute(self, task: AgentTask, state: WorkflowState) -> AgentResult:
@@ -47,5 +55,13 @@ class BaseAgent(ABC):
             )
         revised.summary = f"{prior_result.summary} Revised once to address evaluator feedback."
         revised.confidence = max(0.55, prior_result.confidence - 0.05)
-        log_event(state, "agent_revision", agent=self.agent_name, task=task.task_type, feedback=feedback)
+        log_event(
+            state,
+            event_type="agent_revision",
+            agent=self.agent_name,
+            tool="N/A",
+            status="info",
+            message=f"Agent {self.agent_name} revised task {task.task_type}",
+            details={"task": task.task_type, "feedback": feedback},
+        )
         return revised
