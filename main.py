@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 
 from utils.env import load_env
 from utils.nba_data_source import exit_if_nba_stats_csv_missing
@@ -21,6 +22,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    # Keep CLI output stable on Windows terminals that default to cp1252.
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if callable(reconfigure):
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
     load_env()
     exit_if_nba_stats_csv_missing()
     config = read_yaml(__import__("pathlib").Path("configs/default_config.yaml"))

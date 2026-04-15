@@ -33,5 +33,5 @@ def summarize_logs(state: WorkflowState) -> str:
 
     lines = ["Trace Summary"]
     for entry in state.logs:
-        lines.append(f"- {entry['event']}: {entry['details']}")
+        lines.append(f"- {entry.event_type}: {entry.details}")
     return "\n".join(lines)

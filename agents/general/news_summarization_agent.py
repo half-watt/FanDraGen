@@ -32,7 +32,10 @@ class NewsSummarizationAgent(BaseAgent):
         roster_names = self.player_helper.roster_player_names(state)
         player_news = self.news_tool.fetch_player_news(state, roster_names)
         summary = "Summarized the most relevant player news for the current roster."
-        rationale = [f"{item['player_name']}: {item['summary']}" for item in player_news.data]
+        rationale = [
+            f"{item['player_name']}: {item.get('headline') or item.get('narrative') or 'No detail available.'}"
+            for item in player_news.data
+        ]
         return AgentResult(
             agent_name=self.agent_name,
             summary=summary,

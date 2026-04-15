@@ -7,6 +7,8 @@ the rest of the tool interface to change.
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -37,7 +39,11 @@ class RecommendationTool(BaseTool):
     def _news_delta(self, player_name: str) -> float:
         for item in self._load_news():
             if item["player_name"] == player_name:
-                return float(item["sentiment_delta"])
+                raw = item.get("sentiment_delta", 0.0)
+                try:
+                    return float(raw)
+                except (TypeError, ValueError):
+                    return 0.0
         return 0.0
 
     def _status_penalty(self, row: dict[str, str]) -> float:
@@ -51,6 +57,47 @@ class RecommendationTool(BaseTool):
         if status == "probable":
             return 2.0
         return 0.0
+
+    def _normalize_player_name(self, name: str) -> str:
+        """Normalize player names for resilient matching across aliases and accents."""
+
+        folded = unicodedata.normalize("NFKD", name or "")
+        ascii_name = "".join(ch for ch in folded if not unicodedata.combining(ch))
+        ascii_name = ascii_name.casefold()
+        ascii_name = re.sub(r"[^a-z0-9]+", " ", ascii_name)
+        return re.sub(r"\s+", " ", ascii_name).strip()
+
+    def _resolve_trade_player(
+        self,
+        state: WorkflowState,
+        players_by_name: dict[str, dict[str, Any]],
+        requested_name: str,
+        fallback_rank_index: int,
+    ) -> dict[str, Any]:
+        """Resolve a requested trade name using exact/normalized/fuzzy matching.
+
+        Falls back to a deterministic ranked player when no name variant matches.
+        """
+
+        exact = players_by_name.get(requested_name)
+        if exact is not None:
+            return exact
+
+        requested_norm = self._normalize_player_name(requested_name)
+        by_norm = {self._normalize_player_name(name): row for name, row in players_by_name.items()}
+        normalized_match = by_norm.get(requested_norm)
+        if normalized_match is not None:
+            return normalized_match
+
+        for norm_name, row in by_norm.items():
+            if requested_norm and (requested_norm in norm_name or norm_name in requested_norm):
+                state.add_fallback(f"trade_name_fuzzy_match:{requested_name}")
+                return row
+
+        ranked = sorted(players_by_name.values(), key=lambda r: self._score_player(r), reverse=True)
+        safe_index = max(0, min(fallback_rank_index, len(ranked) - 1))
+        state.add_fallback(f"trade_name_missing:{requested_name}")
+        return ranked[safe_index]
 
     def _score_player(self, row: dict[str, Any], roster_need_weight: float = 0.0) -> float:
         projected = float(row.get("effective_projected_points") or row["projected_points"])
@@ -163,8 +210,10 @@ class RecommendationTool(BaseTool):
 
     def evaluate_trade(self, state: WorkflowState, give_player: str, receive_player: str) -> ToolResult:
         players = {row["player_name"]: row for row in self._load_players(state)}
-        give = players[give_player]
-        receive = players[receive_player]
+        give = self._resolve_trade_player(state, players, give_player, fallback_rank_index=0)
+        receive = self._resolve_trade_player(state, players, receive_player, fallback_rank_index=1)
+        resolved_give = give.get("player_name", give_player)
+        resolved_receive = receive.get("player_name", receive_player)
         give_score = self._score_player(give)
         receive_score = self._score_player(receive)
         delta = round(receive_score - give_score, 2)
@@ -176,10 +225,10 @@ class RecommendationTool(BaseTool):
             score=delta,
             action_type="trade evaluation",
             approval_required=True,
-            proposed_action=f"Trade {give_player} for {receive_player}." if delta > 0 else f"Decline the trade of {give_player} for {receive_player}.",
+            proposed_action=f"Trade {resolved_give} for {resolved_receive}." if delta > 0 else f"Decline the trade of {resolved_give} for {resolved_receive}.",
             rationale=[
-                f"{receive_player} score: {round(receive_score, 2)}",
-                f"{give_player} score: {round(give_score, 2)}",
+                f"{resolved_receive} score: {round(receive_score, 2)}",
+                f"{resolved_give} score: {round(give_score, 2)}",
             ],
             assumptions=["The trade is evaluated as a one-for-one points-league swap."],
             supporting_evidence=[
@@ -193,7 +242,7 @@ class RecommendationTool(BaseTool):
             method_name="evaluate_trade",
             data=recommendation.model_dump(),
             supporting_points=recommendation.rationale,
-            summary=f"Trade delta between {give_player} and {receive_player}: {delta}.",
+            summary=f"Trade delta between {resolved_give} and {resolved_receive}: {delta}.",
             grounding=["RecommendationTool._score_player", "PlayerStatsTool.fetch_player_stats", "data/nba/roster_template.csv"]
         )
         return self._record(state, "evaluate_trade", {"give_player": give_player, "receive_player": receive_player}, result)
