@@ -1,0 +1,266 @@
+﻿python.exe : INFO [fandragen.kaggle] Detected game-log format; aggregating per 
+player from C:\Users\Anthony 
+Watt\Documents\GitHub\FanDraGen\data\kaggle\nba_player_stats_2425.csv
+At C:\Users\Anthony Watt\Documents\GitHub\FanDraGen\run_demo.ps1:17 char:5
++     & $PythonCmd main.py --sample $Sample
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (INFO [fandragen..._stats_2425.csv 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+INFO [fandragen.kaggle] Loaded 561 players from Kaggle CSV C:\Users\Anthony 
+Watt\Documents\GitHub\FanDraGen\data\kaggle\nba_player_stats_2425.csv
+INFO [fandragen.data_source] Loaded 561 NBA player rows from C:\Users\Anthony 
+Watt\Documents\GitHub\FanDraGen\data\kaggle\nba_player_stats_2425.csv
+=== Query ===
+Summarize important news for my roster.
+
+=== Trace Snapshot ===
+{
+  "route": {
+    "intent": "roster news summary",
+    "domain": "nba",
+    "route_target": "NBABossAgent",
+    "confidence": 0.9,
+    "reasoning": "Matched intent 'roster news summary' using deterministic keyword rules (priority order); domain=nba."
+  },
+  "agents": [
+    "NewsSummarizationAgent"
+  ],
+  "tool_calls": [
+    {
+      "tool_name": "LeagueDataTool",
+      "method_name": "fetch_rosters",
+      "arguments": {},
+      "status": "success",
+      "summary": "Loaded roster assignments.",
+      "fallback_used": false,
+      "timestamp": "2026-04-15T01:26:30.112709Z"
+    },
+    {
+      "tool_name": "NewsTool",
+      "method_name": "fetch_player_news",
+      "arguments": {
+        "player_names": [
+          "Nikola Joki\u0107",
+          "Giannis Antetokounmpo",
+          "Luka Don\u010di\u0107",
+          "Shai Gilgeous-Alexander",
+          "Cade Cunningham",
+          "LeBron James"
+        ]
+      },
+      "status": "success",
+      "summary": "Loaded player news.",
+      "fallback_used": false,
+      "timestamp": "2026-04-15T01:26:30.113204Z"
+    }
+  ],
+  "fallback_flags": [],
+  "revision_count": 0,
+  "approval_status": {
+    "approval_required": false,
+    "approved": null,
+    "proposed_action": null,
+    "action_not_executed": true,
+    "checkpoint_reason": "No approval required."
+  },
+  "metrics": {
+    "task_completion_rate": 1.0,
+    "routing_accuracy": 1.0,
+    "tool_invocation_correctness": 1.0,
+    "evaluator_rejection_rate": 0.0,
+    "revision_success_rate": 1.0,
+    "response_grounding_coverage": 1.0,
+    "deterministic_consistency": 1.0,
+    "fallback_event_count": 0,
+    "approval_checkpoint_count": 0
+  },
+  "trace_metadata": {
+    "workflow_steps": [
+      {
+        "step": "route_decision",
+        "intent": "roster news summary",
+        "route_target": "NBABossAgent"
+      },
+      {
+        "step": "trace_metadata_injected"
+      },
+      {
+        "step": "dispatch_boss_agent",
+        "route_target": "NBABossAgent"
+      },
+      {
+        "step": "boss_agent_dispatched",
+        "route_target": "NBABossAgent"
+      },
+      {
+        "step": "metrics_updated"
+      }
+    ],
+    "mode": "mocked",
+    "architecture": "plain_python",
+    "scenario_name": "Final week before fantasy playoffs in the 2024-25 NBA season",
+    "calendar_window": "2025-04-07 to 2025-04-13",
+    "live_espn_enrichment_enabled": false,
+    "gemini_configured": false,
+    "nba_api_enrichment_enabled": false
+  }
+}
+
+=== Log Summary ===
+Trace Summary
+- route_target_dispatched: {'route_target': 'NBABossAgent'}
+- boss_start: {}
+- boss_decomposition: {'tasks': [{'task_type': 'roster news summary', 'description': 'Summarize the most relevant roster news.', 'assigned_agent': 'NewsSummarizationAgent', 'input_payload': {}, 'requires_tools': ['LeagueDataTool', 'NewsTool']}]}
+- agent_start: {'task': 'roster news summary'}
+- tool_call: {'method': 'fetch_rosters', 'fallback': False, 'summary': 'Loaded roster assignments.'}
+- tool_call: {'method': 'fetch_player_news', 'fallback': False, 'summary': 'Loaded player news.'}
+- evaluator_result: {'evaluator': 'OutputQualityEvaluator', 'passed': True, 'issues': [], 'recommendations': [], 'attempt_number': 1}
+- evaluator_result: {'evaluator': 'GroundingEvaluator', 'passed': True, 'issues': [], 'recommendations': [], 'attempt_number': 1}
+- delivery_complete: {'approval_required': False}
+- boss_complete: {}
+- workflow_complete: {'metrics': {'task_completion_rate': 1.0, 'routing_accuracy': 1.0, 'tool_invocation_correctness': 1.0, 'evaluator_rejection_rate': 0.0, 'revision_success_rate': 1.0, 'response_grounding_coverage': 1.0, 'deterministic_consistency': 1.0, 'fallback_event_count': 0, 'approval_checkpoint_count': 0}}
+
+=== Final JSON ===
+{
+  "query": {
+    "text": "Summarize important news for my roster.",
+    "sport": "NBA",
+    "user_id": "demo_user",
+    "league_id": "nba_league_01",
+    "received_at": "2026-04-15T01:26:30.010533Z"
+  },
+  "route": {
+    "intent": "roster news summary",
+    "domain": "nba",
+    "route_target": "NBABossAgent",
+    "confidence": 0.9,
+    "reasoning": "Matched intent 'roster news summary' using deterministic keyword rules (priority order); domain=nba."
+  },
+  "recommendations": [],
+  "summary": "Summarized the most relevant player news for the current roster.",
+  "rationale": [
+    "LeBron James: Resting for playoff preparation",
+    "Shai Gilgeous-Alexander: Probable for must-win game",
+    "Nikola Joki\u0107: Expected to play, team clinched #1 seed",
+    "Cade Cunningham: Out for season finale (knee)"
+  ],
+  "assumptions": [
+    "Only roster-related news from the local news feed is included."
+  ],
+  "supporting_evidence": [],
+  "confidence": 0.86,
+  "data_source": {
+    "nba_stats_csv": "C:\\Users\\Anthony Watt\\Documents\\GitHub\\FanDraGen\\data\\kaggle\\nba_player_stats_2425.csv",
+    "league_config_dir": "data/nba",
+    "using_synthetic_players": false,
+    "fallback_flags": [],
+    "live_espn_enrichment_enabled": false,
+    "nba_api_enrichment_enabled": false,
+    "gemini_configured": false,
+    "gemini_enrichment_applied": false
+  },
+  "approval_status": {
+    "approval_required": false,
+    "approved": null,
+    "proposed_action": null,
+    "action_not_executed": true,
+    "checkpoint_reason": "No approval required."
+  },
+  "trace": {
+    "route": {
+      "intent": "roster news summary",
+      "domain": "nba",
+      "route_target": "NBABossAgent",
+      "confidence": 0.9,
+      "reasoning": "Matched intent 'roster news summary' using deterministic keyword rules (priority order); domain=nba."
+    },
+    "agents": [
+      "NewsSummarizationAgent"
+    ],
+    "tool_calls": [
+      {
+        "tool_name": "LeagueDataTool",
+        "method_name": "fetch_rosters",
+        "arguments": {},
+        "status": "success",
+        "summary": "Loaded roster assignments.",
+        "fallback_used": false,
+        "timestamp": "2026-04-15T01:26:30.112709Z"
+      },
+      {
+        "tool_name": "NewsTool",
+        "method_name": "fetch_player_news",
+        "arguments": {
+          "player_names": [
+            "Nikola Joki\u0107",
+            "Giannis Antetokounmpo",
+            "Luka Don\u010di\u0107",
+            "Shai Gilgeous-Alexander",
+            "Cade Cunningham",
+            "LeBron James"
+          ]
+        },
+        "status": "success",
+        "summary": "Loaded player news.",
+        "fallback_used": false,
+        "timestamp": "2026-04-15T01:26:30.113204Z"
+      }
+    ],
+    "fallback_flags": [],
+    "revision_count": 0,
+    "approval_status": {
+      "approval_required": false,
+      "approved": null,
+      "proposed_action": null,
+      "action_not_executed": true,
+      "checkpoint_reason": "No approval required."
+    },
+    "metrics": {},
+    "trace_metadata": {
+      "workflow_steps": [
+        {
+          "step": "route_decision",
+          "intent": "roster news summary",
+          "route_target": "NBABossAgent"
+        },
+        {
+          "step": "trace_metadata_injected"
+        },
+        {
+          "step": "dispatch_boss_agent",
+          "route_target": "NBABossAgent"
+        },
+        {
+          "step": "boss_agent_dispatched",
+          "route_target": "NBABossAgent"
+        },
+        {
+          "step": "metrics_updated"
+        }
+      ],
+      "mode": "mocked",
+      "architecture": "plain_python",
+      "scenario_name": "Final week before fantasy playoffs in the 2024-25 NBA season",
+      "calendar_window": "2025-04-07 to 2025-04-13",
+      "live_espn_enrichment_enabled": false,
+      "gemini_configured": false,
+      "nba_api_enrichment_enabled": false
+    }
+  }
+}
+
+=== Markdown Response ===
+# FanDraGen Result
+
+---
+**Recommendation:** Summarized the most relevant player news for the current roster.
+**Rationale:** LeBron James: Resting for playoff preparation; Shai Gilgeous-Alexander: Probable for must-win game; Nikola Joki─ç: Expected to play, team clinched #1 seed; Cade Cunningham: Out for season finale (knee)
+**Assumptions:** Only roster-related news from the local news feed is included.
+**Supporting evidence:** No supporting evidence.
+**Confidence:** 0.86
+**Data source:** NBA stats CSV + league templates under data/nba; flags=['none']
+**Approval required:** False
+**Proposed action:** None
+**Action execution:** No real account action is performed in this prototype.

@@ -1,0 +1,287 @@
+﻿python.exe : INFO [fandragen.kaggle] Detected game-log format; aggregating per 
+player from C:\Users\Anthony 
+Watt\Documents\GitHub\FanDraGen\data\kaggle\nba_player_stats_2425.csv
+At C:\Users\Anthony Watt\Documents\GitHub\FanDraGen\run_demo.ps1:17 char:5
++     & $PythonCmd main.py --sample $Sample
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (INFO [fandragen..._stats_2425.csv 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+INFO [fandragen.kaggle] Loaded 561 players from Kaggle CSV C:\Users\Anthony 
+Watt\Documents\GitHub\FanDraGen\data\kaggle\nba_player_stats_2425.csv
+INFO [fandragen.data_source] Loaded 561 NBA player rows from C:\Users\Anthony 
+Watt\Documents\GitHub\FanDraGen\data\kaggle\nba_player_stats_2425.csv
+=== Query ===
+Should I trade Player A for Player B?
+
+=== Trace Snapshot ===
+{
+  "route": {
+    "intent": "trade evaluation",
+    "domain": "nba",
+    "route_target": "NBABossAgent",
+    "confidence": 0.9,
+    "reasoning": "Matched intent 'trade evaluation' using deterministic keyword rules (priority order); domain=nba."
+  },
+  "agents": [
+    "TradeEvaluationAgent"
+  ],
+  "tool_calls": [
+    {
+      "tool_name": "PlayerStatsTool",
+      "method_name": "fetch_player_stats",
+      "arguments": {
+        "player_names": [
+          "LeBron James",
+          "Nikola Joki\u0107"
+        ]
+      },
+      "status": "success",
+      "summary": "Loaded player stat rows.",
+      "fallback_used": false,
+      "timestamp": "2026-04-15T01:26:29.027957Z"
+    },
+    {
+      "tool_name": "RecommendationTool",
+      "method_name": "evaluate_trade",
+      "arguments": {
+        "give_player": "LeBron James",
+        "receive_player": "Nikola Joki\u0107"
+      },
+      "status": "success",
+      "summary": "Trade delta between LeBron James and Nikola Joki\u0107: 7.45.",
+      "fallback_used": false,
+      "timestamp": "2026-04-15T01:26:29.028950Z"
+    }
+  ],
+  "fallback_flags": [],
+  "revision_count": 0,
+  "approval_status": {
+    "approval_required": true,
+    "approved": null,
+    "proposed_action": "Trade LeBron James for Nikola Joki\u0107.",
+    "action_not_executed": true,
+    "checkpoint_reason": "Recommendation-style output requires simulated human approval."
+  },
+  "metrics": {
+    "task_completion_rate": 1.0,
+    "routing_accuracy": 1.0,
+    "tool_invocation_correctness": 1.0,
+    "evaluator_rejection_rate": 0.0,
+    "revision_success_rate": 1.0,
+    "response_grounding_coverage": 1.0,
+    "deterministic_consistency": 1.0,
+    "fallback_event_count": 0,
+    "approval_checkpoint_count": 1
+  },
+  "trace_metadata": {
+    "workflow_steps": [
+      {
+        "step": "route_decision",
+        "intent": "trade evaluation",
+        "route_target": "NBABossAgent"
+      },
+      {
+        "step": "trace_metadata_injected"
+      },
+      {
+        "step": "dispatch_boss_agent",
+        "route_target": "NBABossAgent"
+      },
+      {
+        "step": "boss_agent_dispatched",
+        "route_target": "NBABossAgent"
+      },
+      {
+        "step": "metrics_updated"
+      }
+    ],
+    "mode": "mocked",
+    "architecture": "plain_python",
+    "scenario_name": "Final week before fantasy playoffs in the 2024-25 NBA season",
+    "calendar_window": "2025-04-07 to 2025-04-13",
+    "live_espn_enrichment_enabled": false,
+    "gemini_configured": false,
+    "nba_api_enrichment_enabled": false
+  }
+}
+
+=== Log Summary ===
+Trace Summary
+- route_target_dispatched: {'route_target': 'NBABossAgent'}
+- boss_start: {}
+- boss_decomposition: {'tasks': [{'task_type': 'trade evaluation', 'description': 'Evaluate the proposed one-for-one trade using NBA stats CSV rows.', 'assigned_agent': 'TradeEvaluationAgent', 'input_payload': {'give_player': 'Top Player Omega', 'receive_player': 'Top Player Bravo'}, 'requires_tools': ['PlayerStatsTool', 'RecommendationTool']}]}
+- agent_start: {'task': 'trade evaluation'}
+- tool_call: {'method': 'fetch_player_stats', 'fallback': False, 'summary': 'Loaded player stat rows.'}
+- tool_call: {'method': 'evaluate_trade', 'fallback': False, 'summary': 'Trade delta between LeBron James and Nikola Joki─ç: 7.45.'}
+- evaluator_result: {'evaluator': 'OutputQualityEvaluator', 'passed': True, 'issues': [], 'recommendations': [], 'attempt_number': 1}
+- evaluator_result: {'evaluator': 'GroundingEvaluator', 'passed': True, 'issues': [], 'recommendations': [], 'attempt_number': 1}
+- approval_checkpoint: {'proposed_action': 'Trade LeBron James for Nikola Joki─ç.'}
+- delivery_complete: {'approval_required': True}
+- boss_complete: {}
+- workflow_complete: {'metrics': {'task_completion_rate': 1.0, 'routing_accuracy': 1.0, 'tool_invocation_correctness': 1.0, 'evaluator_rejection_rate': 0.0, 'revision_success_rate': 1.0, 'response_grounding_coverage': 1.0, 'deterministic_consistency': 1.0, 'fallback_event_count': 0, 'approval_checkpoint_count': 1}}
+
+=== Final JSON ===
+{
+  "query": {
+    "text": "Should I trade Player A for Player B?",
+    "sport": "NBA",
+    "user_id": "demo_user",
+    "league_id": "nba_league_01",
+    "received_at": "2026-04-15T01:26:28.927765Z"
+  },
+  "route": {
+    "intent": "trade evaluation",
+    "domain": "nba",
+    "route_target": "NBABossAgent",
+    "confidence": 0.9,
+    "reasoning": "Matched intent 'trade evaluation' using deterministic keyword rules (priority order); domain=nba."
+  },
+  "recommendations": [
+    {
+      "item_id": "trade-kg_00006-kg_00001",
+      "title": "Trade evaluation",
+      "details": "Net heuristic delta: 7.45 in favor of accepting the deal.",
+      "confidence": 0.76,
+      "score": 7.45,
+      "action_type": "trade evaluation",
+      "approval_required": true,
+      "proposed_action": "Trade LeBron James for Nikola Joki\u0107.",
+      "action_not_executed": true,
+      "rationale": [
+        "Nikola Joki\u0107 score: 36.98",
+        "LeBron James score: 29.53"
+      ],
+      "assumptions": [
+        "The trade is evaluated as a one-for-one points-league swap."
+      ],
+      "supporting_evidence": [
+        "RecommendationTool.evaluate_trade",
+        "PlayerStatsTool.fetch_player_stats",
+        "NBA stats CSV (Kaggle format)"
+      ]
+    }
+  ],
+  "summary": "Trade delta between LeBron James and Nikola Joki\u0107: 7.45.",
+  "rationale": [
+    "Nikola Joki\u0107 score: 36.98",
+    "LeBron James score: 29.53"
+  ],
+  "assumptions": [
+    "The trade is evaluated as a one-for-one points-league swap."
+  ],
+  "supporting_evidence": [],
+  "confidence": 0.76,
+  "data_source": {
+    "nba_stats_csv": "C:\\Users\\Anthony Watt\\Documents\\GitHub\\FanDraGen\\data\\kaggle\\nba_player_stats_2425.csv",
+    "league_config_dir": "data/nba",
+    "using_synthetic_players": false,
+    "fallback_flags": [],
+    "live_espn_enrichment_enabled": false,
+    "nba_api_enrichment_enabled": false,
+    "gemini_configured": false,
+    "gemini_enrichment_applied": false
+  },
+  "approval_status": {
+    "approval_required": true,
+    "approved": null,
+    "proposed_action": "Trade LeBron James for Nikola Joki\u0107.",
+    "action_not_executed": true,
+    "checkpoint_reason": "Recommendation-style output requires simulated human approval."
+  },
+  "trace": {
+    "route": {
+      "intent": "trade evaluation",
+      "domain": "nba",
+      "route_target": "NBABossAgent",
+      "confidence": 0.9,
+      "reasoning": "Matched intent 'trade evaluation' using deterministic keyword rules (priority order); domain=nba."
+    },
+    "agents": [
+      "TradeEvaluationAgent"
+    ],
+    "tool_calls": [
+      {
+        "tool_name": "PlayerStatsTool",
+        "method_name": "fetch_player_stats",
+        "arguments": {
+          "player_names": [
+            "LeBron James",
+            "Nikola Joki\u0107"
+          ]
+        },
+        "status": "success",
+        "summary": "Loaded player stat rows.",
+        "fallback_used": false,
+        "timestamp": "2026-04-15T01:26:29.027957Z"
+      },
+      {
+        "tool_name": "RecommendationTool",
+        "method_name": "evaluate_trade",
+        "arguments": {
+          "give_player": "LeBron James",
+          "receive_player": "Nikola Joki\u0107"
+        },
+        "status": "success",
+        "summary": "Trade delta between LeBron James and Nikola Joki\u0107: 7.45.",
+        "fallback_used": false,
+        "timestamp": "2026-04-15T01:26:29.028950Z"
+      }
+    ],
+    "fallback_flags": [],
+    "revision_count": 0,
+    "approval_status": {
+      "approval_required": true,
+      "approved": null,
+      "proposed_action": "Trade LeBron James for Nikola Joki\u0107.",
+      "action_not_executed": true,
+      "checkpoint_reason": "Recommendation-style output requires simulated human approval."
+    },
+    "metrics": {},
+    "trace_metadata": {
+      "workflow_steps": [
+        {
+          "step": "route_decision",
+          "intent": "trade evaluation",
+          "route_target": "NBABossAgent"
+        },
+        {
+          "step": "trace_metadata_injected"
+        },
+        {
+          "step": "dispatch_boss_agent",
+          "route_target": "NBABossAgent"
+        },
+        {
+          "step": "boss_agent_dispatched",
+          "route_target": "NBABossAgent"
+        },
+        {
+          "step": "metrics_updated"
+        }
+      ],
+      "mode": "mocked",
+      "architecture": "plain_python",
+      "scenario_name": "Final week before fantasy playoffs in the 2024-25 NBA season",
+      "calendar_window": "2025-04-07 to 2025-04-13",
+      "live_espn_enrichment_enabled": false,
+      "gemini_configured": false,
+      "nba_api_enrichment_enabled": false
+    }
+  }
+}
+
+=== Markdown Response ===
+# FanDraGen Result
+
+---
+**Recommendation:** Trade evaluation
+**Rationale:** Nikola Joki─ç score: 36.98; LeBron James score: 29.53
+**Assumptions:** The trade is evaluated as a one-for-one points-league swap.
+**Supporting evidence:** No supporting evidence.
+**Confidence:** 0.76
+**Data source:** NBA stats CSV + league templates under data/nba; flags=['none']
+**Approval required:** True
+**Proposed action:** Trade LeBron James for Nikola Joki─ç.
+**Action execution:** No real account action is performed in this prototype.

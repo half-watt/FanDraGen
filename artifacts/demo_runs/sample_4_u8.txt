@@ -1,0 +1,329 @@
+﻿python.exe : INFO [fandragen.kaggle] Detected game-log format; aggregating per 
+player from C:\Users\Anthony 
+Watt\Documents\GitHub\FanDraGen\data\kaggle\nba_player_stats_2425.csv
+At C:\Users\Anthony Watt\Documents\GitHub\FanDraGen\run_demo.ps1:17 char:5
++     & $PythonCmd main.py --sample $Sample
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (INFO [fandragen..._stats_2425.csv 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+INFO [fandragen.kaggle] Loaded 561 players from Kaggle CSV C:\Users\Anthony 
+Watt\Documents\GitHub\FanDraGen\data\kaggle\nba_player_stats_2425.csv
+INFO [fandragen.data_source] Loaded 561 NBA player rows from C:\Users\Anthony 
+Watt\Documents\GitHub\FanDraGen\data\kaggle\nba_player_stats_2425.csv
+=== Query ===
+Who is the best waiver pickup right now?
+
+=== Trace Snapshot ===
+{
+  "route": {
+    "intent": "waiver/free agent pickup",
+    "domain": "nba",
+    "route_target": "NBABossAgent",
+    "confidence": 0.9,
+    "reasoning": "Matched intent 'waiver/free agent pickup' using deterministic keyword rules (priority order); domain=nba."
+  },
+  "agents": [
+    "ManagingAgent"
+  ],
+  "tool_calls": [
+    {
+      "tool_name": "LeagueDataTool",
+      "method_name": "fetch_free_agents",
+      "arguments": {},
+      "status": "success",
+      "summary": "Loaded free-agent pool.",
+      "fallback_used": false,
+      "timestamp": "2026-04-15T01:26:29.565125Z"
+    },
+    {
+      "tool_name": "RecommendationTool",
+      "method_name": "rank_players",
+      "arguments": {
+        "player_ids": [
+          "kg_00025",
+          "kg_00026",
+          "kg_00027",
+          "kg_00028",
+          "kg_00029",
+          "kg_00030"
+        ]
+      },
+      "status": "success",
+      "summary": "Ranked 6 players using heuristic scoring.",
+      "fallback_used": false,
+      "timestamp": "2026-04-15T01:26:29.566117Z"
+    },
+    {
+      "tool_name": "RecommendationTool",
+      "method_name": "recommend_waiver_pickup",
+      "arguments": {
+        "player_ids": [
+          "kg_00025",
+          "kg_00026",
+          "kg_00027",
+          "kg_00028",
+          "kg_00029",
+          "kg_00030"
+        ]
+      },
+      "status": "success",
+      "summary": "Recommended Jaren Jackson Jr. as the top waiver pickup.",
+      "fallback_used": false,
+      "timestamp": "2026-04-15T01:26:29.566117Z"
+    }
+  ],
+  "fallback_flags": [],
+  "revision_count": 0,
+  "approval_status": {
+    "approval_required": true,
+    "approved": null,
+    "proposed_action": "Submit a waiver claim for Jaren Jackson Jr..",
+    "action_not_executed": true,
+    "checkpoint_reason": "Recommendation-style output requires simulated human approval."
+  },
+  "metrics": {
+    "task_completion_rate": 1.0,
+    "routing_accuracy": 1.0,
+    "tool_invocation_correctness": 1.0,
+    "evaluator_rejection_rate": 0.0,
+    "revision_success_rate": 1.0,
+    "response_grounding_coverage": 1.0,
+    "deterministic_consistency": 1.0,
+    "fallback_event_count": 0,
+    "approval_checkpoint_count": 1
+  },
+  "trace_metadata": {
+    "workflow_steps": [
+      {
+        "step": "route_decision",
+        "intent": "waiver/free agent pickup",
+        "route_target": "NBABossAgent"
+      },
+      {
+        "step": "trace_metadata_injected"
+      },
+      {
+        "step": "dispatch_boss_agent",
+        "route_target": "NBABossAgent"
+      },
+      {
+        "step": "boss_agent_dispatched",
+        "route_target": "NBABossAgent"
+      },
+      {
+        "step": "metrics_updated"
+      }
+    ],
+    "mode": "mocked",
+    "architecture": "plain_python",
+    "scenario_name": "Final week before fantasy playoffs in the 2024-25 NBA season",
+    "calendar_window": "2025-04-07 to 2025-04-13",
+    "live_espn_enrichment_enabled": false,
+    "gemini_configured": false,
+    "nba_api_enrichment_enabled": false
+  }
+}
+
+=== Log Summary ===
+Trace Summary
+- route_target_dispatched: {'route_target': 'NBABossAgent'}
+- boss_start: {}
+- boss_decomposition: {'tasks': [{'task_type': 'waiver/free agent pickup', 'description': 'Identify the best current waiver pickup.', 'assigned_agent': 'ManagingAgent', 'input_payload': {}, 'requires_tools': ['LeagueDataTool', 'RecommendationTool']}]}
+- agent_start: {'task': 'waiver/free agent pickup'}
+- tool_call: {'method': 'fetch_free_agents', 'fallback': False, 'summary': 'Loaded free-agent pool.'}
+- tool_call: {'method': 'rank_players', 'fallback': False, 'summary': 'Ranked 6 players using heuristic scoring.'}
+- tool_call: {'method': 'recommend_waiver_pickup', 'fallback': False, 'summary': 'Recommended Jaren Jackson Jr. as the top waiver pickup.'}
+- evaluator_result: {'evaluator': 'OutputQualityEvaluator', 'passed': True, 'issues': [], 'recommendations': [], 'attempt_number': 1}
+- evaluator_result: {'evaluator': 'GroundingEvaluator', 'passed': True, 'issues': [], 'recommendations': [], 'attempt_number': 1}
+- approval_checkpoint: {'proposed_action': 'Submit a waiver claim for Jaren Jackson Jr..'}
+- delivery_complete: {'approval_required': True}
+- boss_complete: {}
+- workflow_complete: {'metrics': {'task_completion_rate': 1.0, 'routing_accuracy': 1.0, 'tool_invocation_correctness': 1.0, 'evaluator_rejection_rate': 0.0, 'revision_success_rate': 1.0, 'response_grounding_coverage': 1.0, 'deterministic_consistency': 1.0, 'fallback_event_count': 0, 'approval_checkpoint_count': 1}}
+
+=== Final JSON ===
+{
+  "query": {
+    "text": "Who is the best waiver pickup right now?",
+    "sport": "NBA",
+    "user_id": "demo_user",
+    "league_id": "nba_league_01",
+    "received_at": "2026-04-15T01:26:29.458484Z"
+  },
+  "route": {
+    "intent": "waiver/free agent pickup",
+    "domain": "nba",
+    "route_target": "NBABossAgent",
+    "confidence": 0.9,
+    "reasoning": "Matched intent 'waiver/free agent pickup' using deterministic keyword rules (priority order); domain=nba."
+  },
+  "recommendations": [
+    {
+      "item_id": "kg_00025",
+      "title": "Add Jaren Jackson Jr. from waivers",
+      "details": "Best free-agent score in the current pool: 26.29.",
+      "confidence": 0.81,
+      "score": 26.29,
+      "action_type": "waiver/free agent pickup",
+      "approval_required": true,
+      "proposed_action": "Submit a waiver claim for Jaren Jackson Jr..",
+      "action_not_executed": true,
+      "rationale": [
+        "Recent average: 27.09",
+        "News sentiment: 0"
+      ],
+      "assumptions": [
+        "Assumes waiver priority is available in mocked mode."
+      ],
+      "supporting_evidence": [
+        "RecommendationTool.rank_players",
+        "RecommendationTool.recommend_waiver_pickup",
+        "LeagueDataTool.fetch_free_agents"
+      ]
+    }
+  ],
+  "summary": "Recommended Jaren Jackson Jr. as the top waiver pickup.",
+  "rationale": [
+    "Recent average: 27.09",
+    "News sentiment: 0"
+  ],
+  "assumptions": [
+    "Assumes waiver priority is available in mocked mode."
+  ],
+  "supporting_evidence": [
+    "Waiver tool result: N/A (score: N/A)",
+    "Free agents considered: N/A, N/A, N/A, N/A, N/A ..."
+  ],
+  "confidence": 0.81,
+  "data_source": {
+    "nba_stats_csv": "C:\\Users\\Anthony Watt\\Documents\\GitHub\\FanDraGen\\data\\kaggle\\nba_player_stats_2425.csv",
+    "league_config_dir": "data/nba",
+    "using_synthetic_players": false,
+    "fallback_flags": [],
+    "live_espn_enrichment_enabled": false,
+    "nba_api_enrichment_enabled": false,
+    "gemini_configured": false,
+    "gemini_enrichment_applied": false
+  },
+  "approval_status": {
+    "approval_required": true,
+    "approved": null,
+    "proposed_action": "Submit a waiver claim for Jaren Jackson Jr..",
+    "action_not_executed": true,
+    "checkpoint_reason": "Recommendation-style output requires simulated human approval."
+  },
+  "trace": {
+    "route": {
+      "intent": "waiver/free agent pickup",
+      "domain": "nba",
+      "route_target": "NBABossAgent",
+      "confidence": 0.9,
+      "reasoning": "Matched intent 'waiver/free agent pickup' using deterministic keyword rules (priority order); domain=nba."
+    },
+    "agents": [
+      "ManagingAgent"
+    ],
+    "tool_calls": [
+      {
+        "tool_name": "LeagueDataTool",
+        "method_name": "fetch_free_agents",
+        "arguments": {},
+        "status": "success",
+        "summary": "Loaded free-agent pool.",
+        "fallback_used": false,
+        "timestamp": "2026-04-15T01:26:29.565125Z"
+      },
+      {
+        "tool_name": "RecommendationTool",
+        "method_name": "rank_players",
+        "arguments": {
+          "player_ids": [
+            "kg_00025",
+            "kg_00026",
+            "kg_00027",
+            "kg_00028",
+            "kg_00029",
+            "kg_00030"
+          ]
+        },
+        "status": "success",
+        "summary": "Ranked 6 players using heuristic scoring.",
+        "fallback_used": false,
+        "timestamp": "2026-04-15T01:26:29.566117Z"
+      },
+      {
+        "tool_name": "RecommendationTool",
+        "method_name": "recommend_waiver_pickup",
+        "arguments": {
+          "player_ids": [
+            "kg_00025",
+            "kg_00026",
+            "kg_00027",
+            "kg_00028",
+            "kg_00029",
+            "kg_00030"
+          ]
+        },
+        "status": "success",
+        "summary": "Recommended Jaren Jackson Jr. as the top waiver pickup.",
+        "fallback_used": false,
+        "timestamp": "2026-04-15T01:26:29.566117Z"
+      }
+    ],
+    "fallback_flags": [],
+    "revision_count": 0,
+    "approval_status": {
+      "approval_required": true,
+      "approved": null,
+      "proposed_action": "Submit a waiver claim for Jaren Jackson Jr..",
+      "action_not_executed": true,
+      "checkpoint_reason": "Recommendation-style output requires simulated human approval."
+    },
+    "metrics": {},
+    "trace_metadata": {
+      "workflow_steps": [
+        {
+          "step": "route_decision",
+          "intent": "waiver/free agent pickup",
+          "route_target": "NBABossAgent"
+        },
+        {
+          "step": "trace_metadata_injected"
+        },
+        {
+          "step": "dispatch_boss_agent",
+          "route_target": "NBABossAgent"
+        },
+        {
+          "step": "boss_agent_dispatched",
+          "route_target": "NBABossAgent"
+        },
+        {
+          "step": "metrics_updated"
+        }
+      ],
+      "mode": "mocked",
+      "architecture": "plain_python",
+      "scenario_name": "Final week before fantasy playoffs in the 2024-25 NBA season",
+      "calendar_window": "2025-04-07 to 2025-04-13",
+      "live_espn_enrichment_enabled": false,
+      "gemini_configured": false,
+      "nba_api_enrichment_enabled": false
+    }
+  }
+}
+
+=== Markdown Response ===
+# FanDraGen Result
+
+---
+**Recommendation:** Add Jaren Jackson Jr. from waivers
+**Rationale:** Recent average: 27.09; News sentiment: 0
+**Assumptions:** Assumes waiver priority is available in mocked mode.
+**Supporting evidence:** Waiver tool result: N/A (score: N/A); Free agents considered: N/A, N/A, N/A, N/A, N/A ...
+**Confidence:** 0.81
+**Data source:** NBA stats CSV + league templates under data/nba; flags=['none']
+**Approval required:** True
+**Proposed action:** Submit a waiver claim for Jaren Jackson Jr..
+**Action execution:** No real account action is performed in this prototype.
