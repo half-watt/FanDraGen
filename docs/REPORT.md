@@ -241,7 +241,7 @@ All 8 demo samples executed to completion with no uncaught exceptions. Artifacts
 Routing confidence was 0.90 for all specific intents and 0.78 for the onboarding query, consistent with the router's intentional lower-confidence tier for the catch-all `onboarding/help` intent. Output confidence was highest for informational paths (news summary: 0.86, explanation: 0.84) and lowest for the fallback path (0.69), reflecting the 0.05-per-cycle confidence penalty applied by the revision loop.
 
 **Sample 3 — Trade Evaluation**
-
+\subsu
 The `TradeEvaluationAgent` resolved "Player A" and "Player B" to their configured aliases (LeBron James and Nikola Jokić) via `NBAPlayerContextHelper`, fetched stat rows for both via `PlayerStatsTool`, and called `RecommendationTool.evaluate_trade()`. The heuristic score for Nikola Jokić was 36.98 versus 29.53 for LeBron James, yielding a net delta of +7.45 in favor of accepting the trade. The result was delivered with `approval_required=true` and the proposed action held at the checkpoint without execution.
 
 **Sample 7 — Fallback / Revision Loop**
